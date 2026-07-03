@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<!-- Lock the popup down: only our own local script, inline styles, no network,
+     no frames/objects. Defense-in-depth on top of contextIsolation. -->
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<title>Claude Usage</title>
+<style>
+  :root {
+    --bg: #12161c;
+    --line: #232932;
+    --track: #2a303a;
+    --text: #e9ecf1;
+    --muted: #767d89;
+    --session: #e07a5a;   /* 5-hour */
+    --weekly: #e8a84a;    /* weekly  */
+    --danger: #e5484d;
+    --mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+    --sans: -apple-system, "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    -webkit-user-select: none;
+    padding: 16px 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    -webkit-app-region: drag;      /* grab the header to move the popup */
+    margin: -6px -6px 0; padding: 6px 6px 0;   /* bigger grab area */
+  }
+  .eyebrow {
+    font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600;
+  }
+  .header-btns { display: flex; align-items: center; gap: 2px; }
+  .refresh, .pin {
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    font-family: var(--sans); font-size: 11px; padding: 4px 6px; border-radius: 6px;
+    -webkit-app-region: no-drag;
+  }
+  .refresh:hover, .pin:hover { color: var(--text); background: var(--line); }
+  /* pinned state stays noticeable but muted — a soft tinted chip, not a solid fill */
+  .pin.active { color: var(--weekly); background: rgba(232, 168, 74, .16); font-weight: 600; }
+  .pin.active:hover { background: rgba(232, 168, 74, .24); }
+
+  /* gauges fill the window so the rings scale with resize */
+  #gauges { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .rings-wrap { position: relative; flex: 1; display: flex; justify-content: center; align-items: center; padding: 4px 0 2px; min-height: 0; }
+  .rings { width: clamp(110px, min(55%, 38vh), 260px); aspect-ratio: 1; height: auto; transform: rotate(-90deg); }
+
+  /* compact mode (small window): legend text can't fit without overlapping
+     the rings, so the numbers move inside the rings instead */
+  .ring-center {
+    display: none;
+    position: absolute; inset: 0;
+    flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+    pointer-events: none;
+  }
+  .ring-center-row { font-family: var(--mono); font-weight: 600; line-height: 1.15; }
+  .ring-center-row.session { color: var(--session); font-size: 15px; }
+  .ring-center-row.weekly { color: var(--weekly); font-size: 12px; }
+  .ring-center-row.danger { color: var(--danger) !important; }
+  .rc-unit { font-size: .68em; color: var(--muted); margin-left: 1px; }
+
+  body.compact .ring-center { display: flex; }
+  body.compact .legend { display: none; }
+  body.compact .rings { width: clamp(90px, min(70%, 46vh), 260px); }
+  .ring-track { fill: none; stroke: var(--track); stroke-width: 11; }
+  .ring-progress {
+    fill: none; stroke-width: 11; stroke-linecap: round;
+    transition: stroke-dashoffset .8s cubic-bezier(.22,.61,.36,1), stroke .3s ease;
+  }
+  .ring-progress.session { stroke: var(--session); }
+  .ring-progress.weekly { stroke: var(--weekly); }
+  .ring-progress.danger { stroke: var(--danger) !important; }
+
+  .legend { display: flex; flex-direction: column; gap: 10px; }
+  .legend-row { display: flex; align-items: flex-start; gap: 9px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 4px; flex: none; }
+  .dot.session { background: var(--session); }
+  .dot.weekly { background: var(--weekly); }
+  .legend-text { flex: 1; min-width: 0; }
+  .gauge-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .gauge-label {
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600;
+  }
+  .reset { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .pct { font-family: var(--mono); font-size: 20px; line-height: 1.3; font-weight: 500; letter-spacing: -.02em; }
+  .pct .unit { font-size: 11px; color: var(--muted); margin-left: 3px; }
+  #s .pct { color: var(--session); }
+  #w .pct { color: var(--weekly); }
+  .danger .pct { color: var(--danger) !important; }
+
+  /* per-model weekly breakdown (e.g. Fable has its own weekly cap) */
+  .per-model { display: none; flex-direction: column; gap: 6px; margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .per-model.show { display: flex; }
+  .pm-row { display: flex; align-items: baseline; gap: 8px; }
+  .pm-label {
+    flex: 1; min-width: 0; font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+    font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .pm-pct { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text); }
+  .pm-reset { font-family: var(--mono); font-size: 10px; color: var(--muted); white-space: nowrap; }
+  .pm-row.danger .pm-pct { color: var(--danger); }
+  body.compact .per-model { display: none !important; }
+
+  footer {
+    margin-top: auto; display: flex; align-items: center; justify-content: space-between;
+    font-size: 10px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 9px;
+  }
+  .badge { font-family: var(--mono); }
+  .demo { color: var(--weekly); }
+
+  /* message / action states */
+  #state { display: none; flex-direction: column; gap: 10px; align-items: flex-start; }
+  #state.show { display: flex; }
+  #gauges.hide { display: none; }
+  #state p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  #state b { color: var(--text); }
+  .btn {
+    font-family: var(--sans); font-size: 12px; font-weight: 600; cursor: pointer;
+    background: var(--session); color: #1a0f0a; border: none; border-radius: 8px; padding: 8px 14px;
+  }
+  .btn:hover { filter: brightness(1.08); }
+</style>
+</head>
+<body>
+  <header>
+    <span class="eyebrow">Claude Usage</span>
+    <div class="header-btns">
+      <button class="refresh" id="refresh">↻ refresh</button>
+      <button class="pin" id="pin" title="Keep on screen">📌 Fix</button>
+    </div>
+  </header>
+
+  <div id="gauges">
+    <div class="rings-wrap">
+      <svg class="rings" viewBox="0 0 132 132">
+        <circle class="ring-track" cx="66" cy="66" r="56"></circle>
+        <circle class="ring-progress session" id="s-ring" cx="66" cy="66" r="56"></circle>
+        <circle class="ring-track" cx="66" cy="66" r="38"></circle>
+        <circle class="ring-progress weekly" id="w-ring" cx="66" cy="66" r="38"></circle>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-center-row session" id="rc-s"><span id="rc-s-pct">--</span><span class="rc-unit">%</span></div>
+        <div class="ring-center-row weekly" id="rc-w"><span id="rc-w-pct">--</span><span class="rc-unit">%</span></div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <section class="legend-row" id="s">
+        <span class="dot session"></span>
+        <div class="legend-text">
+          <div class="gauge-top">
+            <span class="gauge-label">5-hour session</span>
+            <span class="reset" id="s-reset">—</span>
+          </div>
+          <div class="pct" id="s-pct">--<span class="unit">used</span></div>
+        </div>
+      </section>
+
+      <section class="legend-row" id="w">
+        <span class="dot weekly"></span>
+        <div class="legend-text">
+          <div class="gauge-top">
+            <span class="gauge-label">Weekly · all models</span>
+            <span class="reset" id="w-reset">—</span>
+          </div>
+          <div class="pct" id="w-pct">--<span class="unit">used</span></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="per-model" id="per-model"></div>
+  </div>
+
+  <div id="state">
+    <p id="state-msg"></p>
+    <button class="btn" id="state-btn" style="display:none"></button>
+  </div>
+
+  <footer>
+    <span id="foot-left">connecting…</span>
+    <span class="badge" id="foot-right"></span>
+  </footer>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

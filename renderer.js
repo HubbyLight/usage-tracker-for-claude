@@ -1,0 +1,206 @@
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+let current = null;
+
+const RING_CIRC = { s: 2 * Math.PI * 56, w: 2 * Math.PI * 38 };
+
+function countdown(ms) {
+  if (ms == null) return '—';
+  let d = Math.max(0, ms - Date.now());
+  const day = Math.floor(d / 86400e3); d -= day * 86400e3;
+  const h = Math.floor(d / 3600e3);   d -= h * 3600e3;
+  const m = Math.floor(d / 60e3);
+  if (day > 0) return `resets ${day}d ${h}h`;
+  if (h > 0)   return `resets ${h}h ${m}m`;
+  return `resets ${m}m`;
+}
+
+const counters = {};   // per-gauge rAF handles for the % count-up
+
+function countUp(prefix, target) {
+  cancelAnimationFrame(counters[prefix]);
+  const el = $(`${prefix}-pct`);
+  const rcEl = $(`rc-${prefix}-pct`);
+  if (target == null) {
+    el.innerHTML = '--<span class="unit">used</span>';
+    if (rcEl) rcEl.textContent = '--';
+    return;
+  }
+  const t0 = performance.now(), dur = 800;
+  const step = (t) => {
+    const k = Math.min(1, (t - t0) / dur);
+    const eased = 1 - Math.pow(1 - k, 3);   // ease-out, matches the ring sweep
+    const val = Math.round(target * eased);
+    el.innerHTML = val + '<span class="unit">used</span>';
+    if (rcEl) rcEl.textContent = val;
+    if (k < 1) counters[prefix] = requestAnimationFrame(step);
+  };
+  counters[prefix] = requestAnimationFrame(step);
+}
+
+function setGauge(prefix, pct, resetMs, animate) {
+  const row = $(prefix);                       // 's' or 'w' legend row
+  const ring = $(`${prefix}-ring`);
+  const p = pct == null ? null : Math.round(pct);
+  const clamped = p == null ? 0 : Math.min(100, Math.max(0, p));
+  const circ = RING_CIRC[prefix];
+  const danger = p != null && p >= 90;
+
+  ring.style.strokeDasharray = `${circ}`;
+  if (animate) {
+    // restart the sweep from 0 so the refresh visibly counts up
+    ring.style.transition = 'none';
+    ring.style.strokeDashoffset = `${circ}`;
+    void ring.getBoundingClientRect();         // flush so the reset takes
+    ring.style.transition = '';
+    countUp(prefix, p);
+  } else {
+    cancelAnimationFrame(counters[prefix]);
+    $(`${prefix}-pct`).innerHTML = (p == null ? '--' : p) + '<span class="unit">used</span>';
+    const rcEl = $(`rc-${prefix}-pct`);
+    if (rcEl) rcEl.textContent = p == null ? '--' : p;
+  }
+  ring.style.strokeDashoffset = `${circ * (1 - clamped / 100)}`;
+
+  ring.classList.toggle('danger', danger);
+  $(`${prefix}-reset`).textContent = countdown(resetMs);
+  row.classList.toggle('danger', danger);
+  const rcRow = $(`rc-${prefix}`);
+  if (rcRow) rcRow.classList.toggle('danger', danger);
+}
+
+function renderPerModel(list) {
+  const el = $('per-model');
+  if (!list || !list.length) { el.classList.remove('show'); el.innerHTML = ''; return; }
+  el.classList.add('show');
+  el.innerHTML = '';
+  for (const m of list) {
+    const danger = m.pct != null && m.pct >= 90;
+    const row = document.createElement('div');
+    row.className = 'pm-row' + (danger ? ' danger' : '');
+    row.dataset.reset = m.reset ?? '';
+
+    const label = document.createElement('span');
+    label.className = 'pm-label';
+    label.textContent = m.label;
+
+    const pct = document.createElement('span');
+    pct.className = 'pm-pct';
+    pct.textContent = (m.pct == null ? '--' : Math.round(m.pct)) + '%';
+
+    const reset = document.createElement('span');
+    reset.className = 'pm-reset';
+    reset.textContent = countdown(m.reset);
+
+    row.append(label, pct, reset);
+    el.appendChild(row);
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+function showState(msg, btnLabel, btnAction) {
+  $('gauges').classList.add('hide');
+  $('state').classList.add('show');
+  $('state-msg').innerHTML = msg;
+  const btn = $('state-btn');
+  if (btnLabel) {
+    btn.style.display = 'inline-block';
+    btn.textContent = btnLabel;
+    btn.onclick = btnAction;
+  } else { btn.style.display = 'none'; }
+}
+function showGauges() {
+  $('gauges').classList.remove('hide');
+  $('state').classList.remove('show');
+}
+
+let lastKey = null;       // last rendered percentages
+let forceAnimate = false; // set on manual refresh / popup reopen
+
+function render(u) {
+  current = u;
+  switch (u.state) {
+    case 'ok': {
+      showGauges();
+      // animate from 0 only when it's meaningful — a value change, a manual
+      // refresh, or reopening the popup. Background polls repaint silently.
+      const key = `${u.sessionPct}|${u.weeklyPct}`;
+      const animate = forceAnimate || key !== lastKey;
+      lastKey = key; forceAnimate = false;
+      setGauge('s', u.sessionPct, u.sessionReset, animate);
+      setGauge('w', u.weeklyPct, u.weeklyReset, animate);
+      renderPerModel(u.perModel);
+      $('foot-left').textContent = u.updatedAt
+        ? 'updated ' + new Date(u.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : '';
+      $('foot-right').innerHTML = u.demo ? '<span class="demo">DEMO</span>' : 'live';
+      break;
+    }
+    case 'login':
+      showState('Not signed in to <b>Claude</b>. Sign in once to start tracking.',
+        'Sign in to Claude', () => window.usageApi.login());
+      $('foot-left').textContent = ''; $('foot-right').textContent = '';
+      break;
+    case 'setup':
+      showState('Couldn\u2019t determine your usage endpoint. Copy <b>config.example.js</b> to <b>config.js</b> and set <b>USAGE_ENDPOINT</b> (see README), or sign in to an account with claude.ai access.');
+      $('foot-left').textContent = 'setup needed'; $('foot-right').textContent = '';
+      break;
+    case 'parse':
+      showState('Got a response but couldn\u2019t read the numbers. Adjust <b>parseUsage()</b> in main.js.');
+      $('foot-left').textContent = 'check parseUsage'; $('foot-right').textContent = '';
+      break;
+    case 'error':
+      // u.message comes from network/JS error strings — escape it so unexpected
+      // markup in an error body can never execute in the popup (innerHTML sink).
+      showState('Something went wrong: <b>' + escapeHtml(u.message || 'unknown') + '</b>');
+      $('foot-left').textContent = 'error'; $('foot-right').textContent = '';
+      break;
+    default:
+      $('foot-left').textContent = 'connecting…';
+  }
+}
+
+$('refresh').onclick = () => { forceAnimate = true; window.usageApi.refresh(); };
+
+// pin: keep the popup on screen (no auto-hide)
+let pinned = false;
+$('pin').onclick = () => {
+  pinned = !pinned;
+  $('pin').classList.toggle('active', pinned);
+  $('pin').textContent = pinned ? '📌 Fixed' : '📌 Fix';
+  $('pin').title = pinned ? 'Click to unfix (auto-hide again)' : 'Keep on screen';
+  window.usageApi.setPinned(pinned);
+};
+
+// popup re-shown → replay the count-up once
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') forceAnimate = true;
+});
+
+window.usageApi.onUsage(render);
+
+// below this size the legend text collides with the rings — fold the
+// numbers into the ring centers instead of shrinking text into mush
+function updateCompact() {
+  document.body.classList.toggle('compact', window.innerWidth < 300 || window.innerHeight < 340);
+}
+window.addEventListener('resize', updateCompact);
+updateCompact();
+
+// keep the reset countdowns ticking every second
+setInterval(() => {
+  if (current && current.state === 'ok') {
+    $('s-reset').textContent = countdown(current.sessionReset);
+    $('w-reset').textContent = countdown(current.weeklyReset);
+    document.querySelectorAll('.pm-row').forEach((row) => {
+      const ms = row.dataset.reset ? Number(row.dataset.reset) : null;
+      row.querySelector('.pm-reset').textContent = countdown(ms);
+    });
+  }
+}, 1000);

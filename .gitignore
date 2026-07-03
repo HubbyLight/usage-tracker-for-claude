@@ -1,0 +1,39 @@
+# Personal, machine-local config (copy config.example.js -> config.js)
+config.js
+
+# Dependencies & build output
+node_modules/
+dist/
+out/
+*.exe
+
+# Local runtime state written to userData (per-machine, never for the repo)
+popup-bounds.json
+settings.json
+raw-usage.json
+
+# --- Electron / Chromium session + login data (DEFENSIVE) ---------------------
+# The persist:claude login session normally lives in the OS userData dir
+# (%APPDATA%\claude-usage-tray on Windows), OUTSIDE this folder, so it is not
+# committed. These entries are a safety net in case any of that data ever ends
+# up inside the repo (e.g. a copied userData dir or a relocated userData path):
+# they hold auth cookies and would leak your logged-in session if published.
+Partitions/
+Network/
+Cookies
+Cookies-journal
+Local Storage/
+Session Storage/
+IndexedDB/
+Local State
+Preferences
+Cache/
+Code Cache/
+GPUCache/
+DawnGraphiteCache/
+DawnWebGPUCache/
+Shared Dictionary/
+blob_storage/
+*.ldb
+*.log
+lockfile
