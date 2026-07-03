@@ -1,5 +1,5 @@
 
-# claude-usage-tray
+# claude-usage-tracker
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Version](https://img.shields.io/badge/version-0.1.0-brightgreen.svg)
@@ -21,7 +21,7 @@ The tray icon itself is a tiny dual-ring gauge that fills as your usage climbs.
 > this line and the `<!-- -->` around the image below to make it show.
 > _(Tip: press `Win`+`Shift`+`S` to snip the popup, then save into the `docs` folder.)_
 
-<!-- ![claude-usage-tray popup](docs/screenshot.png) -->
+<!-- ![claude-usage-tracker popup](docs/screenshot.png) -->
 
 ---
 
@@ -49,7 +49,7 @@ The tray icon itself is a tiny dual-ring gauge that fills as your usage climbs.
 
 ### For users (just want to run it)
 
-1. Go to the **[Releases](https://github.com/HubbyLight/claude-usage-tray/releases)** tab.
+1. Go to the **[Releases](https://github.com/HubbyLight/claude-usage-tracker/releases)** tab.
 2. Download the latest `ClaudeUsage.exe` (portable — no installer needed).
 3. Run it. On first launch, click **"Sign in to Claude"** and log in once — the
    session persists, and your numbers go live.
@@ -59,8 +59,8 @@ The tray icon itself is a tiny dual-ring gauge that fills as your usage climbs.
 ### For developers (run from source)
 
 ```bash
-git clone https://github.com/HubbyLight/claude-usage-tray.git
-cd claude-usage-tray
+git clone https://github.com/HubbyLight/claude-usage-tracker.git
+cd claude-usage-tracker
 npm install
 npm start
 ```
@@ -110,7 +110,7 @@ Find `<your-org-uuid>` via claude.ai → Settings → Usage with DevTools open
 
 ## 💬 Feedback & Contributing
 
-Found a bug, or want a feature? **[Open an issue](https://github.com/HubbyLight/claude-usage-tray/issues)** —
+Found a bug, or want a feature? **[Open an issue](https://github.com/HubbyLight/claude-usage-tracker/issues)** —
 that's the best way to reach me, and it doesn't require sharing anyone's email.
 
 Pull requests are welcome too. For a bigger change, open an issue first so we can

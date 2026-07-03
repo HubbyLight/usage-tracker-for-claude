@@ -1,7 +1,7 @@
 {
-  "name": "claude-usage-tray",
+  "name": "claude-usage-tracker",
   "version": "0.1.0",
-  "description": "Windows tray app that shows your Claude.ai 5-hour and weekly usage at a glance",
+  "description": "Windows tray app that tracks your Claude.ai 5-hour and weekly usage at a glance",
   "main": "main.js",
   "license": "MIT",
   "scripts": {
@@ -14,7 +14,7 @@
     "electron-builder": "^24.13.3"
   },
   "build": {
-    "appId": "com.claudeusage.tray",
+    "appId": "com.claudeusage.tracker",
     "productName": "Claude Usage",
     "win": {
       "target": "portable",
