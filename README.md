@@ -1,58 +1,91 @@
-# Claude Usage — Windows tray app
 
-A tiny tray app that shows your **claude.ai 5-hour session** and **weekly** usage
-at a glance, so you stop finding out you're throttled mid-prompt.
+# claude-usage-tray
 
-Left-click the tray icon → popup with both percentages + reset countdowns.
-Right-click → Refresh / Sign in / Quit.
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Version](https://img.shields.io/badge/version-0.1.0-brightgreen.svg)
+![Platform](https://img.shields.io/badge/platform-Windows-0078D6.svg?logo=windows)
+![Built with Electron](https://img.shields.io/badge/built%20with-Electron-47848F.svg?logo=electron&logoColor=white)
+
+A featherweight Windows system-tray app that shows your **claude.ai 5-hour session**
+and **weekly** usage at a glance — with reset countdowns and limit alerts — so you
+never get throttled mid-prompt again.
+
+Left-click the tray icon for a popup with both percentages and live countdowns.
+The tray icon itself is a tiny dual-ring gauge that fills as your usage climbs.
 
 ---
 
-## 1. Requirements
+## 📸 Screenshot
 
-- **Node.js 18+** on Windows — https://nodejs.org (LTS installer)
-- That's it. `npm install` pulls Electron.
+> **TODO:** capture the popup and save it as `docs/screenshot.png`, then delete
+> this line and the `<!-- -->` around the image below to make it show.
+> _(Tip: press `Win`+`Shift`+`S` to snip the popup, then save into the `docs` folder.)_
 
-## 2. Run it (see the UI first)
+<!-- ![claude-usage-tray popup](docs/screenshot.png) -->
+
+---
+
+## ✨ Features
+
+- **Zero-dependency ring gauges** — the concentric usage rings on the taskbar icon
+  are drawn by hand: raw RGBA pixel math wrapped in a from-scratch PNG encoder, no
+  canvas or graphics library. It stays tiny and fast.
+- **Live reset countdowns** — see exactly when your 5-hour and weekly windows roll over.
+- **Native desktop notifications** at 75% and 90% — fired once per window (not every
+  poll), toggleable from the tray menu.
+- **Per-model weekly breakdown** — accounts with a per-model cap (e.g. Fable) get an
+  extra row per model.
+- **Auto-discovers your org** — no config to edit; it finds the right endpoint from
+  your logged-in session and keeps working even if you switch accounts.
+- **Smart popup** — remembers its position/size, pin it to keep it open, or let it
+  snap to the corner and auto-hide.
+- **Launch on Windows startup** — one toggle in the tray menu.
+- **Reads only your own data, in your own session** — the request runs inside a
+  logged-in claude.ai window using your own cookies. Nothing is sent anywhere else.
+
+---
+
+## 🚀 Installation & Setup
+
+### For users (just want to run it)
+
+1. Go to the **[Releases](https://github.com/HubbyLight/claude-usage-tray/releases)** tab.
+2. Download the latest `ClaudeUsage.exe` (portable — no installer needed).
+3. Run it. On first launch, click **"Sign in to Claude"** and log in once — the
+   session persists, and your numbers go live.
+
+> _(No releases yet? See "Publishing a release" below to build and upload the `.exe`.)_
+
+### For developers (run from source)
 
 ```bash
+git clone https://github.com/HubbyLight/claude-usage-tray.git
 cd claude-usage-tray
 npm install
 npm start
 ```
 
-It ships with **DEMO_MODE on**, so it runs immediately with fake numbers
-(5h 82%, weekly 34%). Confirm the tray icon + popup look right, then wire real data.
+It ships with **demo mode off**, so it reads your real usage after you sign in.
+(Flip `DEMO_MODE = true` in `main.js` to preview the UI with fake numbers.)
 
-## 3. Wire your real usage
+### Configuration — usually none needed
 
-The app reads the *same data the claude.ai Settings → Usage page shows*, by making
-the request **inside a logged-in claude.ai window** (its session cookies come along
-automatically).
+By default there's **nothing to configure**: the app calls `/api/organizations`,
+picks your chat-capable org, and reads `/api/organizations/<uuid>/usage`. Because the
+org id is discovered at runtime, it keeps working across account switches, and **no
+personal id ever lives in the code.**
 
-With `DEMO_MODE = false` (the default), there's **nothing to configure**: on each
-poll the app calls `/api/organizations`, picks your chat-capable org, and fetches
-`/api/organizations/<uuid>/usage`. Because the org id is discovered at runtime, it
-keeps working when you sign into a different account (the cached org is dropped and
-re-discovered automatically).
+<details>
+<summary><b>Optional:</b> pin a specific organization</summary>
 
-Restart (`npm start`). First launch shows **"Sign in to Claude"** → click it, log in
-once (the session persists), and the numbers go live.
-
-### Optional: pin a specific org with `config.js`
-
-Personal settings live in `config.js`, which is **git-ignored** (so your account
-details never end up in the repo). It's optional — skip it and the app
-auto-discovers your org.
-
-Set it up only if you want to force a specific organization (e.g. your account
-has more than one and the auto-pick chooses the wrong one):
+Only needed if your account has more than one org and the auto-pick chooses the
+wrong one:
 
 ```bash
 cp config.example.js config.js      # Windows: copy config.example.js config.js
 ```
 
-Then open `config.js` and set your own URL:
+Then set your URL in `config.js` (it's git-ignored, so it never lands in the repo):
 
 ```js
 module.exports = {
@@ -60,73 +93,57 @@ module.exports = {
 };
 ```
 
-Restart the app. If `config.js` is missing or `USAGE_ENDPOINT` is left blank, the
-app falls back to auto-discovery; if a URL is set but wrong, the popup shows
-**"setup needed"**.
+Find `<your-org-uuid>` via claude.ai → Settings → Usage with DevTools open
+(F12 → Network → Fetch/XHR → look for the `usage` request's URL).
+</details>
 
-> If Anthropic ever changes the response field names, the popup shows
-> **"check parseUsage"** — only then do you need to touch `parseUsage(json)` in
-> `main.js` (it returns `{ sessionPct, sessionReset, weeklyPct, weeklyReset, perModel }`;
-> reset is epoch ms or an ISO string — the helper handles both).
+---
 
-## 4. Package to a single .exe (optional)
+## 🛠️ Built With
+
+- **[Electron](https://www.electronjs.org/)** — the desktop shell (tray, windows, notifications)
+- **[Node.js](https://nodejs.org/)** — runtime
+- **[electron-builder](https://www.electron.build/)** — packages the portable `.exe`
+- No runtime UI/graphics dependencies — the gauges and tray icon are pure JS + hand-rolled PNG encoding.
+
+---
+
+## 💬 Feedback & Contributing
+
+Found a bug, or want a feature? **[Open an issue](https://github.com/HubbyLight/claude-usage-tray/issues)** —
+that's the best way to reach me, and it doesn't require sharing anyone's email.
+
+Pull requests are welcome too. For a bigger change, open an issue first so we can
+discuss the direction.
+
+---
+
+## 📦 Publishing a release (maintainer note)
+
+To hand users a ready-to-run `.exe`:
 
 ```bash
 npm run dist
 ```
-Produces a portable `.exe` in `dist/`. (Uses electron-builder.)
 
-## 5. Installed copy
-
-A standalone copy also lives at `%LOCALAPPDATA%\Programs\ClaudeUsage\ClaudeUsage.exe`,
-with a Desktop and Start Menu shortcut ("Claude Usage") pointing at it. It
-registers itself to start with Windows (toggle from the tray's right-click
-menu). It shares the same login session as this source folder (same app
-`name` in package.json → same userData path), so signing in once covers both.
-
-After editing files in this folder, push the changes to that installed copy
-with:
-```bash
-npm run sync-install
-```
-then quit (tray → Quit) and relaunch it from the Desktop/Start Menu shortcut.
+This produces a portable executable in `dist/`. Create a **Release** on GitHub and
+attach that file so it appears under the Releases tab.
 
 ---
 
-## How it works (short version)
-
-- `main.js` — tray + popup + a hidden `persist:claude` window that holds your
-  login. Every `POLL_SECONDS` (20s) it fetches your org's `/usage` endpoint inside
-  that window and pushes the result to the popup + redraws the tray rings.
-- `renderer.js` / `popup.html` — the readout (percentages, live reset countdowns).
-- `preload.js` — the thin, safe bridge between them.
-
-## Honest caveats
+## ⚠️ Caveats
 
 - **Unofficial.** The usage endpoint is internal and undocumented. Anthropic can
-  change it any time and this will break — you'd re-find it (step 3) and adjust
-  `parseUsage`. Fine for a personal tool; don't build a business on it.
-- **Reads only your own data, in your own session.** No password sharing, no
-  scraping other accounts. Same thing the Usage page already does — just surfaced
-  in your tray.
-- There's already a free incumbent (ClaudeKarma) for the browser. This is your
-  own native Windows version — good to build, learn from, and actually use.
+  change it at any time, which may break the readout — if that happens the popup
+  shows **"check parseUsage"** and `parseUsage()` in `main.js` needs a small tweak.
+  Great as a personal tool; don't build a business on it.
+- **Reads only your own data.** No password sharing, no scraping other accounts —
+  it surfaces the same numbers the claude.ai Usage page already shows you.
 
-## Next steps (ask Claude to add)
+---
 
-- ~~Concentric ring gauge instead of bars (matches the icon)~~ done
-- ~~Desktop notifications at 75% / 90%~~ done — a native Windows notification
-  fires once per threshold per window (5-hour session and weekly, tracked
-  separately), so it won't repeat every 20s poll. Toggle from the tray's
-  right-click menu → **Desktop notifications (75% / 90%)**.
-- ~~Per-model weekly breakdown~~ done — accounts with a per-model weekly cap
-  (e.g. Fable) get an extra row per model below the two main gauges, pulled
-  from the `limits` array's `weekly_scoped` entries. Hidden in compact mode
-  (small window) along with the rest of the legend.
-- ~~Launch on startup + start hidden in tray~~ done — right-click the tray
-  icon → **Start with Windows** to toggle. Auto-enables itself the first time
-  you run the packaged `.exe` (`npm run dist`); a `npm start` dev run leaves
-  it off by default so it doesn't register a `node_modules` path as your
-  startup target.
+## 📄 License & Author
 
-All planned next-steps are now implemented.
+Released under the **[MIT License](LICENSE)** — free to use, modify, and share.
+
+Created by **[@HubbyLight](https://github.com/HubbyLight)**.
