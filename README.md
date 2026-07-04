@@ -20,11 +20,10 @@ The tray icon itself is a tiny dual-ring gauge that fills as your usage climbs.
 
 ## 📸 Screenshot
 
-> **TODO:** capture the popup and save it as `docs/screenshot.png`, then delete
-> this line and the `<!-- -->` around the image below to make it show.
-> _(Tip: press `Win`+`Shift`+`S` to snip the popup, then save into the `docs` folder.)_
+![usage-tracker-for-claude — compact ring and full detail panel](docs/showcase.png)
 
-<!-- ![usage-tracker-for-claude popup](docs/screenshot.png) -->
+Drag any edge to resize — from a glanceable ring to a full stats panel, same
+live data, no reload.
 
 ---
 
