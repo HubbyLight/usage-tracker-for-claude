@@ -149,4 +149,5 @@ attach that file so it appears under the Releases tab.
 
 Released under the **[MIT License](LICENSE)** — free to use, modify, and share.
 
-Created by **[@HubbyLight](https://github.com/HubbyLight)**.
+Created by **[@HubbyLight](https://github.com/HubbyLight)**. Built with Claude as a
+pair-programming assistant; I owned the architecture and security decisions.
