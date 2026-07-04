@@ -511,23 +511,6 @@ function buildTray() {
       checked: notifsEnabled,
       click: (item) => { notifsEnabled = item.checked; saveSetting('notifsEnabled', item.checked); },
     },
-    {
-      // Explicit user action → fire a toast regardless of the on/off toggle,
-      // so you can confirm Windows actually shows notifications for this app
-      // (rules out Focus Assist / app-notification blocks vs. the toggle).
-      label: 'Send test notification',
-      click: () => {
-        if (!Notification.isSupported()) return;
-        const n = new Notification({
-          title: 'Claude Usage — test',
-          body: notifsEnabled
-            ? 'Notifications are ON. Alerts fire at 70%, 90% and 100%.'
-            : 'This is a test. Turn ON the checkbox above to get real 70% / 90% / 100% alerts.',
-          icon: NOTIF_ICON(),
-        });
-        n.show();
-      },
-    },
     { type: 'separator' },
     { label: 'Quit', click: () => { app.exit(0); } },
   ]);
