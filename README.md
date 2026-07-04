@@ -31,8 +31,8 @@ The tray icon itself is a tiny dual-ring gauge that fills as your usage climbs.
   are drawn by hand: raw RGBA pixel math wrapped in a from-scratch PNG encoder, no
   canvas or graphics library. It stays tiny and fast.
 - **Live reset countdowns** — see exactly when your 5-hour and weekly windows roll over.
-- **Native desktop notifications** at 75% and 90% — fired once per window (not every
-  poll), toggleable from the tray menu.
+- **Native desktop notifications** at 70%, 90%, and 100% — each fires once per
+  window on first reach (not every poll), toggleable from the tray menu.
 - **Per-model weekly breakdown** — accounts with a per-model cap (e.g. Fable) get an
   extra row per model.
 - **Auto-discovers your org** — no config to edit; it finds the right endpoint from

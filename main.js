@@ -113,7 +113,7 @@ function saveSetting(key, value) {
 }
 let notifsEnabled = loadSettings().notifsEnabled !== false; // default on
 
-/* ---- desktop notifications at 75% / 90% ------------------------------------
+/* ---- desktop notifications at 70% / 90% / 100% -----------------------------
    Fires once per threshold per window (tracked by that window's resets_at,
    so it fires again next session/week instead of repeating every 20s poll).
    The API's resets_at drifts by a few ms/seconds between identical polls
@@ -131,12 +131,19 @@ function maybeNotify(kind, label, pct, resetMs) {
   const st = notifyState[kind];
   const bucket = resetMs == null ? null : Math.floor(resetMs / 60000);
   if (bucket !== st.reset) { st.reset = bucket; st.firedAt = 0; } // new window → can fire again
-  for (const t of [90, 75]) {
+  // Descending so a single poll that jumps past several thresholds fires only
+  // the highest. st.firedAt tracks the highest threshold already alerted for this
+  // window, so each of 70 / 90 / 100 fires exactly once, on first reach.
+  for (const t of [100, 90, 70]) {
     if (pct >= t && st.firedAt < t) {
       st.firedAt = t;
+      const body = t >= 100 ? "You've hit your usage limit."
+        : t >= 90 ? "You're almost at the limit."
+        : 'Usage is getting high.';
       const n = new Notification({
         title: `Claude ${label}: ${Math.round(pct)}% used`,
-        body: t >= 90 ? "You're almost at the limit." : 'Usage is getting high.',
+        body,
+        icon: NOTIF_ICON(),
       });
       n.on('click', () => { if (popup) { positionPopupIfNeeded(); popup.show(); popup.focus(); sendToPopup(); } });
       n.show();
@@ -155,6 +162,8 @@ function saveBounds() {
 }
 
 const ICON = () => nativeImage.createFromPath(path.join(__dirname, 'icon.png'));
+// Larger icon for desktop-notification toasts (the 32px tray icon looks blurry there).
+const NOTIF_ICON = () => nativeImage.createFromPath(path.join(__dirname, 'icon-256.png'));
 
 /* ---- single instance: relaunching (desktop shortcut, Start Menu) just
         refreshes the running tray app instead of spawning a duplicate ---- */
@@ -497,7 +506,7 @@ function buildTray() {
       click: (item) => app.setLoginItemSettings({ openAtLogin: item.checked }),
     },
     {
-      label: 'Desktop notifications (75% / 90%)',
+      label: 'Desktop notifications (70% / 90% / 100%)',
       type: 'checkbox',
       checked: notifsEnabled,
       click: (item) => { notifsEnabled = item.checked; saveSetting('notifsEnabled', item.checked); },
@@ -512,8 +521,9 @@ function buildTray() {
         const n = new Notification({
           title: 'Claude Usage — test',
           body: notifsEnabled
-            ? 'Notifications are ON. Alerts fire at 75% and 90%.'
-            : 'This is a test. Turn ON the checkbox above to get real 75% / 90% alerts.',
+            ? 'Notifications are ON. Alerts fire at 70%, 90% and 100%.'
+            : 'This is a test. Turn ON the checkbox above to get real 70% / 90% / 100% alerts.',
+          icon: NOTIF_ICON(),
         });
         n.show();
       },
