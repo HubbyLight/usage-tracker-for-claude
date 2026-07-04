@@ -114,23 +114,26 @@ function saveSetting(key, value) {
 let notifsEnabled = loadSettings().notifsEnabled !== false; // default on
 
 /* ---- desktop notifications at 70% / 90% / 100% -----------------------------
-   Fires once per threshold per window (tracked by that window's resets_at,
-   so it fires again next session/week instead of repeating every 20s poll).
-   The API's resets_at drifts by a few ms/seconds between identical polls
-   (same window, just re-timestamped), so comparing it raw made every poll
-   look like a "new window" and re-fired the notification constantly —
-   bucketing to the minute absorbs that jitter while still detecting a real
-   rollover, which shifts resets_at by hours/days. */
+   Fires once per threshold per window. We re-arm only when usage falls back
+   below the lowest threshold — i.e. the window actually rolled over and usage
+   dropped. Within a window usage only climbs, so each threshold alerts exactly
+   once.
+
+   (Earlier this keyed the "same window?" check off the API's resets_at, but that
+   timestamp jitters by a few seconds between otherwise-identical polls; whenever
+   the jitter straddled a minute boundary the alert re-armed and fired again,
+   producing the irregular repeat toasts. Usage level is a stable signal —
+   resets_at isn't — so we key off that instead and ignore resets_at here.) */
+const RE_ARM_BELOW = 70; // usage must dip under this before alerts can fire again
 const notifyState = {
-  session: { firedAt: 0, reset: null },
-  weekly: { firedAt: 0, reset: null },
+  session: { firedAt: 0 },
+  weekly: { firedAt: 0 },
 };
 
-function maybeNotify(kind, label, pct, resetMs) {
+function maybeNotify(kind, label, pct) {
   if (!notifsEnabled || pct == null || !Notification.isSupported()) return;
   const st = notifyState[kind];
-  const bucket = resetMs == null ? null : Math.floor(resetMs / 60000);
-  if (bucket !== st.reset) { st.reset = bucket; st.firedAt = 0; } // new window → can fire again
+  if (pct < RE_ARM_BELOW) st.firedAt = 0; // window rolled over → can fire again
   // Descending so a single poll that jumps past several thresholds fires only
   // the highest. st.firedAt tracks the highest threshold already alerted for this
   // window, so each of 70 / 90 / 100 fires exactly once, on first reach.
@@ -481,8 +484,8 @@ async function poll() {
     latest = { state: 'error', message: String(e), updatedAt: Date.now() };
   }
   if (latest.state === 'ok') {
-    maybeNotify('session', '5-hour session', latest.sessionPct, latest.sessionReset);
-    maybeNotify('weekly', 'weekly usage', latest.weeklyPct, latest.weeklyReset);
+    maybeNotify('session', '5-hour session', latest.sessionPct);
+    maybeNotify('weekly', 'weekly usage', latest.weeklyPct);
   }
   updateTray(); sendToPopup();
 }
