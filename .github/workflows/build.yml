@@ -1,0 +1,41 @@
+name: Build
+
+# Builds distributable apps on GitHub's machines — including the macOS .dmg,
+# which cannot be produced on Windows. Run it from the repo's Actions tab
+# ("Run workflow"), or push a tag like v0.2.0. Download the results from the
+# run's "Artifacts" section.
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            args: --win
+            name: windows
+          - os: macos-latest
+            args: --mac
+            name: macos
+    runs-on: ${{ matrix.os }}
+    env:
+      # No signing certificates in CI — build unsigned instead of failing.
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx electron-builder ${{ matrix.args }} --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.zip

@@ -3,12 +3,12 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Version](https://img.shields.io/badge/version-0.1.0-brightgreen.svg)
-![Platform](https://img.shields.io/badge/platform-Windows-0078D6.svg?logo=windows)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-0078D6.svg)
 ![Built with Electron](https://img.shields.io/badge/built%20with-Electron-47848F.svg?logo=electron&logoColor=white)
 
-A featherweight Windows system-tray app that shows your **claude.ai 5-hour session**
-and **weekly** usage at a glance — with reset countdowns and limit alerts — so you
-never get throttled mid-prompt again.
+A featherweight system-tray (Windows) / menu-bar (macOS) app that shows your
+**claude.ai 5-hour session** and **weekly** usage at a glance — with reset
+countdowns and limit alerts — so you never get throttled mid-prompt again.
 
 Left-click the tray icon for a popup with both percentages and live countdowns.
 The tray icon itself is a tiny dual-ring gauge that fills as your usage climbs.
@@ -41,7 +41,7 @@ live data, no reload.
   your logged-in session and keeps working even if you switch accounts.
 - **Smart popup** — remembers its position/size, pin it to keep it open, or let it
   snap to the corner and auto-hide.
-- **Launch on Windows startup** — one toggle in the tray menu.
+- **Launch at startup** — one toggle in the tray menu (Windows & macOS).
 - **Reads only your own data, in your own session** — the request runs inside a
   logged-in claude.ai window using your own cookies. Nothing is sent anywhere else.
 
@@ -57,6 +57,19 @@ live data, no reload.
    session persists, and your numbers go live.
 
 > _(No releases yet? See "Publishing a release" below to build and upload the `.exe`.)_
+
+### macOS
+
+The same app runs as a **menu-bar** icon on macOS (popup drops from the menu
+bar, Dock icon hidden).
+
+- **No Mac needed to build:** this repo ships a GitHub Actions workflow —
+  go to the **Actions** tab → **Build** → _Run workflow_, then download the
+  `macos` artifact (`.dmg` / `.zip`) from the finished run.
+- **On a Mac:** `npm install && npm run dist:mac` → `.dmg` appears in `dist/`.
+
+The build is unsigned, so on first launch **right-click the app → Open**
+(or run `xattr -cr "/Applications/Claude Usage.app"` once).
 
 ### For developers (run from source)
 

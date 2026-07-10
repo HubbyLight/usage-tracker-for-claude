@@ -4,6 +4,11 @@ const { app, BrowserWindow, Tray, Menu, ipcMain, screen, nativeImage, Notificati
 const path = require('path');
 const fs = require('fs');
 
+// macOS runs as a menu-bar app: smaller tray icon (18pt + @2x), popup drops
+// from the menu bar instead of the taskbar corner, and the Dock icon is hidden.
+// Every darwin branch below is additive — the Windows paths are untouched.
+const IS_MAC = process.platform === 'darwin';
+
 /* =========================================================================
  *  CONFIG
  * =========================================================================
@@ -227,8 +232,8 @@ function encodePng(pixels, size) {
   ]);
 }
 
-function drawUsageIcon(sessionPct, weeklyPct) {
-  const size = 32, SS = 4, N = SS * SS;
+function drawUsageIcon(sessionPct, weeklyPct, size = 32) {
+  const SS = 4, N = SS * SS;
   const BG = [0x14, 0x18, 0x1f], TRACK = [0x3a, 0x41, 0x4d];
   const CORAL = [0xe2, 0x79, 0x5a], AMBER = [0xe8, 0xa8, 0x4a], DANGER = [0xe5, 0x48, 0x4d];
   const cx = size / 2, cy = size / 2;
@@ -285,12 +290,24 @@ function drawUsageIcon(sessionPct, weeklyPct) {
   return encodePng(pixels, size);
 }
 
+function baseTrayImage() {
+  // The 32px asset overflows the ~22pt macOS menu bar — shrink it there.
+  return IS_MAC ? ICON().resize({ width: 18, height: 18 }) : ICON();
+}
+
 function trayImage() {
-  if (latest.state !== 'ok' || latest.sessionPct == null) return ICON();
+  if (latest.state !== 'ok' || latest.sessionPct == null) return baseTrayImage();
   try {
+    if (IS_MAC) {
+      // 18pt logical size with an @2x representation so Retina stays crisp.
+      const img = nativeImage.createEmpty();
+      img.addRepresentation({ scaleFactor: 1, buffer: drawUsageIcon(latest.sessionPct, latest.weeklyPct, 18) });
+      img.addRepresentation({ scaleFactor: 2, buffer: drawUsageIcon(latest.sessionPct, latest.weeklyPct, 36) });
+      return img;
+    }
     return nativeImage.createFromBuffer(drawUsageIcon(latest.sessionPct, latest.weeklyPct));
   } catch (_) {
-    return ICON();
+    return baseTrayImage();
   }
 }
 
@@ -367,6 +384,18 @@ function showLogin() {
 function positionPopup() {
   const { workArea } = screen.getPrimaryDisplay();
   const [w, h] = popup.getSize();
+  if (IS_MAC) {
+    // Menu-bar app: drop the popup just below the menu bar, centered under the
+    // tray icon when we can read its bounds, clamped to the work area.
+    let x = workArea.x + workArea.width - w - 12;
+    try {
+      const b = tray && tray.getBounds();
+      if (b && b.width) x = b.x + b.width / 2 - w / 2;
+    } catch (_) {}
+    x = Math.max(workArea.x + 8, Math.min(x, workArea.x + workArea.width - w - 8));
+    popup.setPosition(Math.round(x), Math.round(workArea.y + 8));
+    return;
+  }
   const x = Math.round(workArea.x + workArea.width - w - 12);
   const y = Math.round(workArea.y + workArea.height - h - 12);
   popup.setPosition(x, y);
@@ -497,7 +526,7 @@ function startPolling() {
 }
 
 function buildTray() {
-  tray = new Tray(ICON());
+  tray = new Tray(baseTrayImage());
   const menu = Menu.buildFromTemplate([
     { label: 'Refresh now', click: () => poll() },
     { label: 'Sign in to Claude…', click: () => showLogin() },
@@ -530,6 +559,8 @@ app.whenReady().then(() => {
   // Also what Windows shows as the notification source, since no Start Menu
   // shortcut is registered with this AUMID to supply a friendlier display name.
   if (process.platform === 'win32') app.setAppUserModelId('CLAUDE USAGE TRACKER');
+  // Menu-bar-only app on macOS — no Dock icon.
+  if (IS_MAC && app.dock) app.dock.hide();
   // Auto-launch on Windows sign-in once this is the packaged app (a dev run via
   // `npm start` would otherwise register node_modules/electron.exe as the
   // startup target, which breaks the next time you reinstall deps).

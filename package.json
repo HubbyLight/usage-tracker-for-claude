@@ -1,12 +1,13 @@
 {
   "name": "claude-usage-tracker",
   "version": "0.1.0",
-  "description": "Windows tray app that tracks your Claude.ai 5-hour and weekly usage at a glance",
+  "description": "Tray / menu-bar app that tracks your Claude.ai 5-hour and weekly usage at a glance",
   "main": "main.js",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
     "sync-install": "node scripts/sync-install.js"
   },
   "devDependencies": {
@@ -19,6 +20,11 @@
     "win": {
       "target": "portable",
       "icon": "icon-256.png"
+    },
+    "mac": {
+      "target": ["dmg", "zip"],
+      "icon": "icon-512.png",
+      "category": "public.app-category.utilities"
     }
   }
 }
