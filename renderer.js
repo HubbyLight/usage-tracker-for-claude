@@ -106,7 +106,7 @@ function escapeHtml(s) {
 
 /* ---- wide (landscape) layout: horizontal bars ----------------------------
    Rebuilt on each 'ok' render so it always holds current data when the user
-   stretches the window. Shown/hidden purely via body.bars (see updateLayout). */
+   stretches the window. Shown/hidden purely via body.hbars (see updateLayout). */
 function barRow(label, pct, resetMs, colorVar, animate) {
   const p = pct == null ? null : Math.round(pct);
   const danger = p != null && p >= 90;
