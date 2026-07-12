@@ -188,6 +188,21 @@ function renderVBars(u, animate) {
   if (Array.isArray(u.perModel)) {
     for (const m of u.perModel) el.appendChild(vbarCol(m.label, m.pct, m.reset, 'var(--weekly)', animate));
   }
+  fitVBars();
+}
+
+// Vertical columns collapse by WIDTH (they already fill the height): when the
+// window gets too narrow, drop the lowest-priority columns first so each stays
+// at least MIN wide — per-model (Fable) → weekly → (5-hour session stays).
+function fitVBars() {
+  const el = $('vbars');
+  if (!document.body.classList.contains('vbars')) return;
+  const cols = [...el.children];
+  cols.forEach((c) => c.classList.remove('hide'));
+  const GAP = 18, MARGIN = 12, MIN = 54;         // keep a little side margin
+  const avail = el.clientWidth - MARGIN;
+  const maxN = Math.max(1, Math.floor((avail + GAP) / (MIN + GAP)));
+  for (let i = cols.length - 1; i >= maxN; i--) cols[i].classList.add('hide');
 }
 
 // In the horizontal bar mode, keep only the rows that fit the current height
@@ -302,7 +317,8 @@ function updateLayout() {
   document.body.classList.toggle('hbars', hbars);
   document.body.classList.toggle('vbars', vbars);
   document.body.classList.toggle('compact', compact);
-  fitBars();   // re-evaluate which horizontal bars fit at the new height
+  fitBars();    // horizontal: which rows fit the height
+  fitVBars();   // vertical: which columns fit the width
 }
 window.addEventListener('resize', updateLayout);
 updateLayout();

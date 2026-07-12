@@ -134,6 +134,7 @@
   /* vertical bars — used when the window is tall (portrait); columns fill upward */
   #vbars { display: none; flex: 1; flex-direction: row; align-items: stretch; justify-content: center; gap: 18px; min-height: 0; padding: 10px 6px 4px; }
   .vbar { flex: 1 1 0; max-width: 96px; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .vbar.hide { display: none; }
   .vbar-pct { font-family: var(--mono); font-size: 18px; font-weight: 500; letter-spacing: -.02em; }
   .vbar-track { flex: 1; width: 24px; min-height: 40px; background: var(--track); border-radius: 12px; overflow: hidden; display: flex; align-items: flex-end; }
   .vbar-fill { width: 100%; border-radius: 12px; transition: height .8s cubic-bezier(.22,.61,.36,1), background .3s ease; }
