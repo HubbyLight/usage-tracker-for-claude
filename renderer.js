@@ -106,7 +106,7 @@ function escapeHtml(s) {
 
 /* ---- wide (landscape) layout: horizontal bars ----------------------------
    Rebuilt on each 'ok' render so it always holds current data when the user
-   drags the window wide. Shown/hidden purely via body.wide (see updateLayout). */
+   stretches the window. Shown/hidden purely via body.bars (see updateLayout). */
 function barRow(label, pct, resetMs, colorVar, animate) {
   const p = pct == null ? null : Math.round(pct);
   const danger = p != null && p >= 90;
@@ -195,7 +195,7 @@ function render(u) {
       setGauge('s', u.sessionPct, u.sessionReset, animate);
       setGauge('w', u.weeklyPct, u.weeklyReset, animate);
       renderPerModel(u.perModel);
-      renderBars(u, animate);   // wide-mode bars (hidden unless body.wide)
+      renderBars(u, animate);   // bar list (hidden unless body.bars)
       $('foot-left').textContent = u.updatedAt
         ? 'updated ' + new Date(u.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : '';
