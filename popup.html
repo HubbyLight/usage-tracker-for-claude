@@ -74,10 +74,10 @@
   body.compact .ring-center { display: flex; }
   body.compact .legend { display: none; }
   body.compact .rings { width: clamp(58px, min(66%, 42vh), 260px); }
-  /* at min size the refresh/pin buttons collide with the rings — hide them
-     (refresh stays on the tray menu); the ring is a pure glance view here */
-  body.compact .header-btns { display: none; }
   body.compact footer { padding-top: 6px; }
+  /* only when too narrow for the eyebrow + buttons on one line do we drop the
+     buttons (refresh stays on the tray menu); at wider sizes they stay put */
+  body.narrow .header-btns { display: none; }
   .ring-track { fill: none; stroke: var(--track); stroke-width: 11; }
   .ring-progress {
     fill: none; stroke-width: 11; stroke-linecap: round;

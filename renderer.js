@@ -317,6 +317,8 @@ function updateLayout() {
   document.body.classList.toggle('hbars', hbars);
   document.body.classList.toggle('vbars', vbars);
   document.body.classList.toggle('compact', compact);
+  // too narrow for the eyebrow + refresh/pin buttons on one line → drop buttons
+  document.body.classList.toggle('narrow', w < 240);
   fitBars();    // horizontal: which rows fit the height
   fitVBars();   // vertical: which columns fit the width
 }
