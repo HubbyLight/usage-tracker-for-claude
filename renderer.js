@@ -312,7 +312,7 @@ window.usageApi.onUsage(render);
 function updateLayout() {
   const w = window.innerWidth, h = window.innerHeight;
   const hbars = w >= 400 && w >= h * 1.3;   // clearly landscape → horizontal bars
-  const vbars = !hbars && h >= 440 && h >= w * 1.3;  // clearly tall → vertical bars
+  const vbars = !hbars && h >= 380 && h >= w * 1.3;  // tall → vertical bars (kicks in a bit sooner)
   const compact = !hbars && !vbars && (w < 300 || h < 340);
   document.body.classList.toggle('hbars', hbars);
   document.body.classList.toggle('vbars', vbars);
