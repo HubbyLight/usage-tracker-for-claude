@@ -131,8 +131,20 @@
   .bar-fill { height: 100%; border-radius: 6px; transition: width .8s cubic-bezier(.22,.61,.36,1), background .3s ease; }
   .bar-pct { font-family: var(--mono); font-size: 19px; font-weight: 500; letter-spacing: -.02em; text-align: right; min-width: 3.2ch; }
 
-  body.bars .rings-wrap, body.bars .legend, body.bars .per-model { display: none; }
-  body.bars #bars { display: flex; }
+  /* vertical bars — used when the window is tall (portrait); columns fill upward */
+  #vbars { display: none; flex: 1; flex-direction: row; align-items: stretch; justify-content: center; gap: 18px; min-height: 0; padding: 10px 6px 4px; }
+  .vbar { flex: 1 1 0; max-width: 96px; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .vbar-pct { font-family: var(--mono); font-size: 18px; font-weight: 500; letter-spacing: -.02em; }
+  .vbar-track { flex: 1; width: 24px; min-height: 40px; background: var(--track); border-radius: 12px; overflow: hidden; display: flex; align-items: flex-end; }
+  .vbar-fill { width: 100%; border-radius: 12px; transition: height .8s cubic-bezier(.22,.61,.36,1), background .3s ease; }
+  .vbar-label { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; color: var(--muted); text-align: center; line-height: 1.25; max-width: 100%; overflow-wrap: anywhere; }
+  .vbar-reset { font-family: var(--mono); font-size: 9px; color: var(--muted); text-align: center; }
+
+  /* bars mode hides rings/legend; horizontal (hbars) vs vertical (vbars) pick which list */
+  body.hbars .rings-wrap, body.hbars .legend, body.hbars .per-model,
+  body.vbars .rings-wrap, body.vbars .legend, body.vbars .per-model { display: none; }
+  body.hbars #bars { display: flex; }
+  body.vbars #vbars { display: flex; }
 
   footer {
     margin-top: auto; display: flex; align-items: center; justify-content: space-between;
@@ -203,8 +215,10 @@
 
     <div class="per-model" id="per-model"></div>
 
-    <!-- wide (landscape) layout: horizontal bars, populated by renderer.js -->
+    <!-- landscape layout: horizontal bars, populated by renderer.js -->
     <div id="bars"></div>
+    <!-- portrait/tall layout: vertical bars, populated by renderer.js -->
+    <div id="vbars"></div>
   </div>
 
   <div id="state">

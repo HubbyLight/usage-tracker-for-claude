@@ -149,11 +149,53 @@ function renderBars(u, animate) {
   fitBars();
 }
 
-// In wide mode, keep only the bars that fit the current height (with margin),
-// dropping the lowest-priority ones first: per-model → weekly → (session stays).
+/* ---- vertical bars: used when the window is tall (portrait) ---------------
+   Same data as the horizontal list, but columns that fill upward so they use
+   the height. Short labels since the columns are narrow. */
+function vbarCol(label, pct, resetMs, colorVar, animate) {
+  const p = pct == null ? null : Math.round(pct);
+  const danger = p != null && p >= 90;
+  const color = danger ? 'var(--danger)' : colorVar;
+  const col = document.createElement('div');
+  col.className = 'vbar' + (danger ? ' danger' : '');
+  col.dataset.reset = resetMs == null ? '' : resetMs;
+  col.innerHTML =
+    '<span class="vbar-pct"></span>' +
+    '<div class="vbar-track"><div class="vbar-fill"></div></div>' +
+    '<span class="vbar-label"></span><span class="vbar-reset"></span>';
+  const pctEl = col.querySelector('.vbar-pct');
+  pctEl.textContent = p == null ? '--' : p + '%';
+  pctEl.style.color = color;
+  col.querySelector('.vbar-label').textContent = label;
+  col.querySelector('.vbar-reset').textContent = countdown(resetMs);
+  const fill = col.querySelector('.vbar-fill');
+  fill.style.background = color;
+  const target = p == null ? 0 : Math.min(100, Math.max(0, p));
+  if (animate) {
+    fill.style.height = '0%';
+    requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.height = target + '%'; }));
+  } else {
+    fill.style.height = target + '%';
+  }
+  return col;
+}
+
+function renderVBars(u, animate) {
+  const el = $('vbars');
+  el.innerHTML = '';
+  el.appendChild(vbarCol('5-hour', u.sessionPct, u.sessionReset, 'var(--session)', animate));
+  el.appendChild(vbarCol('weekly', u.weeklyPct, u.weeklyReset, 'var(--weekly)', animate));
+  if (Array.isArray(u.perModel)) {
+    for (const m of u.perModel) el.appendChild(vbarCol(m.label, m.pct, m.reset, 'var(--weekly)', animate));
+  }
+}
+
+// In the horizontal bar mode, keep only the rows that fit the current height
+// (with margin), dropping the lowest-priority first: per-model → weekly →
+// (session stays). Vertical bars fill the height so they don't need this.
 function fitBars() {
   const bars = $('bars');
-  if (!document.body.classList.contains('bars')) return;
+  if (!document.body.classList.contains('hbars')) return;
   const rows = [...bars.children];
   rows.forEach((r) => r.classList.remove('hide'));
   const GAP = 16, MARGIN = 24;                 // never fill edge-to-edge
@@ -195,7 +237,8 @@ function render(u) {
       setGauge('s', u.sessionPct, u.sessionReset, animate);
       setGauge('w', u.weeklyPct, u.weeklyReset, animate);
       renderPerModel(u.perModel);
-      renderBars(u, animate);   // bar list (hidden unless body.bars)
+      renderBars(u, animate);   // horizontal bars (hidden unless body.hbars)
+      renderVBars(u, animate);  // vertical bars (hidden unless body.vbars)
       $('foot-left').textContent = u.updatedAt
         ? 'updated ' + new Date(u.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : '';
@@ -253,12 +296,13 @@ window.usageApi.onUsage(render);
 // bars wins over compact so a wide-but-short window shows bars, not tiny rings.
 function updateLayout() {
   const w = window.innerWidth, h = window.innerHeight;
-  const bars = (w >= 400 && w >= h * 1.3)   // clearly landscape
-            || (h >= 440 && h >= w * 1.3);  // clearly portrait/tall
-  const compact = !bars && (w < 300 || h < 340);
-  document.body.classList.toggle('bars', bars);
+  const hbars = w >= 400 && w >= h * 1.3;   // clearly landscape → horizontal bars
+  const vbars = !hbars && h >= 440 && h >= w * 1.3;  // clearly tall → vertical bars
+  const compact = !hbars && !vbars && (w < 300 || h < 340);
+  document.body.classList.toggle('hbars', hbars);
+  document.body.classList.toggle('vbars', vbars);
   document.body.classList.toggle('compact', compact);
-  fitBars();   // re-evaluate which bars fit at the new height
+  fitBars();   // re-evaluate which horizontal bars fit at the new height
 }
 window.addEventListener('resize', updateLayout);
 updateLayout();
@@ -275,6 +319,10 @@ setInterval(() => {
     document.querySelectorAll('#bars .bar-row').forEach((row) => {
       const ms = row.dataset.reset ? Number(row.dataset.reset) : null;
       row.querySelector('.bar-reset').textContent = countdown(ms);
+    });
+    document.querySelectorAll('#vbars .vbar').forEach((col) => {
+      const ms = col.dataset.reset ? Number(col.dataset.reset) : null;
+      col.querySelector('.vbar-reset').textContent = countdown(ms);
     });
   }
 }, 1000);
