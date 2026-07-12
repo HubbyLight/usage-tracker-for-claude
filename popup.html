@@ -39,7 +39,7 @@
   }
   .eyebrow {
     font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
-    color: var(--muted); font-weight: 600;
+    color: var(--muted); font-weight: 600; white-space: nowrap;
   }
   .header-btns { display: flex; align-items: center; gap: 2px; }
   .refresh, .pin {
@@ -73,7 +73,11 @@
 
   body.compact .ring-center { display: flex; }
   body.compact .legend { display: none; }
-  body.compact .rings { width: clamp(90px, min(70%, 46vh), 260px); }
+  body.compact .rings { width: clamp(58px, min(66%, 42vh), 260px); }
+  /* at min size the refresh/pin buttons collide with the rings — hide them
+     (refresh stays on the tray menu); the ring is a pure glance view here */
+  body.compact .header-btns { display: none; }
+  body.compact footer { padding-top: 6px; }
   .ring-track { fill: none; stroke: var(--track); stroke-width: 11; }
   .ring-progress {
     fill: none; stroke-width: 11; stroke-linecap: round;
