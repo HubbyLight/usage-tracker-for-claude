@@ -114,6 +114,23 @@
   .pm-row.danger .pm-pct { color: var(--danger); }
   body.compact .per-model { display: none !important; }
 
+  /* wide mode (landscape window): rings waste the horizontal space, so switch
+     to full-width horizontal bars that actually use the extra width */
+  #bars { display: none; flex: 1; flex-direction: column; justify-content: center; gap: 16px; min-height: 0; padding: 4px 2px; }
+  .bar-row { display: grid; grid-template-columns: minmax(96px, 22%) 1fr auto; align-items: center; gap: 14px; }
+  .bar-head { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .bar-label {
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 600;
+    color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .bar-reset { font-family: var(--mono); font-size: 10px; color: var(--muted); white-space: nowrap; }
+  .bar-track { height: 12px; background: var(--track); border-radius: 6px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; transition: width .8s cubic-bezier(.22,.61,.36,1), background .3s ease; }
+  .bar-pct { font-family: var(--mono); font-size: 19px; font-weight: 500; letter-spacing: -.02em; text-align: right; min-width: 3.2ch; }
+
+  body.wide .rings-wrap, body.wide .legend, body.wide .per-model { display: none; }
+  body.wide #bars { display: flex; }
+
   footer {
     margin-top: auto; display: flex; align-items: center; justify-content: space-between;
     font-size: 10px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 9px;
@@ -182,6 +199,9 @@
     </div>
 
     <div class="per-model" id="per-model"></div>
+
+    <!-- wide (landscape) layout: horizontal bars, populated by renderer.js -->
+    <div id="bars"></div>
   </div>
 
   <div id="state">

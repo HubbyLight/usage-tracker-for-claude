@@ -104,6 +104,48 @@ function escapeHtml(s) {
   ));
 }
 
+/* ---- wide (landscape) layout: horizontal bars ----------------------------
+   Rebuilt on each 'ok' render so it always holds current data when the user
+   drags the window wide. Shown/hidden purely via body.wide (see updateLayout). */
+function barRow(label, pct, resetMs, colorVar, animate) {
+  const p = pct == null ? null : Math.round(pct);
+  const danger = p != null && p >= 90;
+  const color = danger ? 'var(--danger)' : colorVar;
+  const row = document.createElement('div');
+  row.className = 'bar-row' + (danger ? ' danger' : '');
+  row.dataset.reset = resetMs == null ? '' : resetMs;
+  row.innerHTML =
+    '<div class="bar-head"><span class="bar-label"></span>' +
+    '<span class="bar-reset"></span></div>' +
+    '<div class="bar-track"><div class="bar-fill"></div></div>' +
+    '<span class="bar-pct"></span>';
+  row.querySelector('.bar-label').textContent = label;
+  row.querySelector('.bar-reset').textContent = countdown(resetMs);
+  const pctEl = row.querySelector('.bar-pct');
+  pctEl.textContent = p == null ? '--' : p + '%';
+  pctEl.style.color = color;
+  const fill = row.querySelector('.bar-fill');
+  fill.style.background = color;
+  const target = p == null ? 0 : Math.min(100, Math.max(0, p));
+  if (animate) {
+    fill.style.width = '0%';
+    requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = target + '%'; }));
+  } else {
+    fill.style.width = target + '%';
+  }
+  return row;
+}
+
+function renderBars(u, animate) {
+  const el = $('bars');
+  el.innerHTML = '';
+  el.appendChild(barRow('5-hour session', u.sessionPct, u.sessionReset, 'var(--session)', animate));
+  el.appendChild(barRow('Weekly · all models', u.weeklyPct, u.weeklyReset, 'var(--weekly)', animate));
+  if (Array.isArray(u.perModel)) {
+    for (const m of u.perModel) el.appendChild(barRow(m.label, m.pct, m.reset, 'var(--weekly)', animate));
+  }
+}
+
 function showState(msg, btnLabel, btnAction) {
   $('gauges').classList.add('hide');
   $('state').classList.add('show');
@@ -136,6 +178,7 @@ function render(u) {
       setGauge('s', u.sessionPct, u.sessionReset, animate);
       setGauge('w', u.weeklyPct, u.weeklyReset, animate);
       renderPerModel(u.perModel);
+      renderBars(u, animate);   // wide-mode bars (hidden unless body.wide)
       $('foot-left').textContent = u.updatedAt
         ? 'updated ' + new Date(u.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : '';
@@ -185,13 +228,20 @@ document.addEventListener('visibilitychange', () => {
 
 window.usageApi.onUsage(render);
 
-// below this size the legend text collides with the rings — fold the
-// numbers into the ring centers instead of shrinking text into mush
-function updateCompact() {
-  document.body.classList.toggle('compact', window.innerWidth < 300 || window.innerHeight < 340);
+// Three layouts by window shape:
+//  - wide    : landscape window → horizontal bars use the extra width
+//  - compact : small window → numbers fold into the ring centers
+//  - normal  : rings on top, legend below
+// Wide wins over compact so a wide-but-short window shows bars, not tiny rings.
+function updateLayout() {
+  const w = window.innerWidth, h = window.innerHeight;
+  const wide = w >= 400 && w >= h * 1.3;   // clearly landscape → bars
+  const compact = !wide && (w < 300 || h < 340);
+  document.body.classList.toggle('wide', wide);
+  document.body.classList.toggle('compact', compact);
 }
-window.addEventListener('resize', updateCompact);
-updateCompact();
+window.addEventListener('resize', updateLayout);
+updateLayout();
 
 // keep the reset countdowns ticking every second
 setInterval(() => {
@@ -201,6 +251,10 @@ setInterval(() => {
     document.querySelectorAll('.pm-row').forEach((row) => {
       const ms = row.dataset.reset ? Number(row.dataset.reset) : null;
       row.querySelector('.pm-reset').textContent = countdown(ms);
+    });
+    document.querySelectorAll('#bars .bar-row').forEach((row) => {
+      const ms = row.dataset.reset ? Number(row.dataset.reset) : null;
+      row.querySelector('.bar-reset').textContent = countdown(ms);
     });
   }
 }, 1000);
