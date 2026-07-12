@@ -316,7 +316,7 @@ function createPopup() {
   popup = new BrowserWindow({
     width: (saved && saved.width) || 320,
     height: (saved && saved.height) || 360,
-    minWidth: 240,
+    minWidth: 150,    // low enough that a tall, narrow vertical view can collapse to one column
     minHeight: 150,   // low enough that a wide, short bar view can collapse to a single row
     show: false,
     frame: false,
