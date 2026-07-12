@@ -316,8 +316,8 @@ function createPopup() {
   popup = new BrowserWindow({
     width: (saved && saved.width) || 320,
     height: (saved && saved.height) || 360,
-    minWidth: 260,
-    minHeight: 300,
+    minWidth: 240,
+    minHeight: 150,   // low enough that a wide, short bar view can collapse to a single row
     show: false,
     frame: false,
     resizable: true,           // frameless still gets edge resize handles

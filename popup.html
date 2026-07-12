@@ -114,10 +114,13 @@
   .pm-row.danger .pm-pct { color: var(--danger); }
   body.compact .per-model { display: none !important; }
 
-  /* wide mode (landscape window): rings waste the horizontal space, so switch
-     to full-width horizontal bars that actually use the extra width */
-  #bars { display: none; flex: 1; flex-direction: column; justify-content: center; gap: 16px; min-height: 0; padding: 4px 2px; }
-  .bar-row { display: grid; grid-template-columns: minmax(96px, 22%) 1fr auto; align-items: center; gap: 14px; }
+  /* bars mode (window stretched far from square, wide OR tall): rings waste the
+     extra space, so switch to a full-width horizontal bar list instead */
+  #bars { display: none; flex: 1; flex-direction: column; justify-content: center; gap: 16px; min-height: 0; padding: 4px 2px; overflow: hidden; }
+  /* flex: none so rows keep their natural height (never squish) — fitBars()
+     hides whole rows by priority instead when the window gets too short */
+  .bar-row { flex: 0 0 auto; display: grid; grid-template-columns: minmax(96px, 22%) 1fr auto; align-items: center; gap: 14px; }
+  .bar-row.hide { display: none; }
   .bar-head { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .bar-label {
     font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 600;
@@ -128,8 +131,8 @@
   .bar-fill { height: 100%; border-radius: 6px; transition: width .8s cubic-bezier(.22,.61,.36,1), background .3s ease; }
   .bar-pct { font-family: var(--mono); font-size: 19px; font-weight: 500; letter-spacing: -.02em; text-align: right; min-width: 3.2ch; }
 
-  body.wide .rings-wrap, body.wide .legend, body.wide .per-model { display: none; }
-  body.wide #bars { display: flex; }
+  body.bars .rings-wrap, body.bars .legend, body.bars .per-model { display: none; }
+  body.bars #bars { display: flex; }
 
   footer {
     margin-top: auto; display: flex; align-items: center; justify-content: space-between;

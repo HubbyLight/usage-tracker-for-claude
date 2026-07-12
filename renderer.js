@@ -139,11 +139,28 @@ function barRow(label, pct, resetMs, colorVar, animate) {
 function renderBars(u, animate) {
   const el = $('bars');
   el.innerHTML = '';
+  // Order = drop priority: rows are hidden from the end first when short, so
+  // per-model (Fable…) goes first, then weekly, and 5-hour session always stays.
   el.appendChild(barRow('5-hour session', u.sessionPct, u.sessionReset, 'var(--session)', animate));
   el.appendChild(barRow('Weekly · all models', u.weeklyPct, u.weeklyReset, 'var(--weekly)', animate));
   if (Array.isArray(u.perModel)) {
     for (const m of u.perModel) el.appendChild(barRow(m.label, m.pct, m.reset, 'var(--weekly)', animate));
   }
+  fitBars();
+}
+
+// In wide mode, keep only the bars that fit the current height (with margin),
+// dropping the lowest-priority ones first: per-model → weekly → (session stays).
+function fitBars() {
+  const bars = $('bars');
+  if (!document.body.classList.contains('bars')) return;
+  const rows = [...bars.children];
+  rows.forEach((r) => r.classList.remove('hide'));
+  const GAP = 16, MARGIN = 24;                 // never fill edge-to-edge
+  const avail = bars.clientHeight - MARGIN;
+  const shown = rows.slice();
+  const needed = () => shown.reduce((s, r) => s + r.offsetHeight, 0) + GAP * Math.max(0, shown.length - 1);
+  while (shown.length > 1 && needed() > avail) shown.pop().classList.add('hide');
 }
 
 function showState(msg, btnLabel, btnAction) {
@@ -228,17 +245,20 @@ document.addEventListener('visibilitychange', () => {
 
 window.usageApi.onUsage(render);
 
-// Three layouts by window shape:
-//  - wide    : landscape window → horizontal bars use the extra width
-//  - compact : small window → numbers fold into the ring centers
-//  - normal  : rings on top, legend below
-// Wide wins over compact so a wide-but-short window shows bars, not tiny rings.
+// Layouts by window shape:
+//  - bars    : stretched far from square (wide OR tall) → horizontal bar list
+//              that fills the long axis; hides low-priority rows when short
+//  - compact : small & near-square → numbers fold into the ring centers
+//  - normal  : near-square → rings on top, legend below
+// bars wins over compact so a wide-but-short window shows bars, not tiny rings.
 function updateLayout() {
   const w = window.innerWidth, h = window.innerHeight;
-  const wide = w >= 400 && w >= h * 1.3;   // clearly landscape → bars
-  const compact = !wide && (w < 300 || h < 340);
-  document.body.classList.toggle('wide', wide);
+  const bars = (w >= 400 && w >= h * 1.3)   // clearly landscape
+            || (h >= 440 && h >= w * 1.3);  // clearly portrait/tall
+  const compact = !bars && (w < 300 || h < 340);
+  document.body.classList.toggle('bars', bars);
   document.body.classList.toggle('compact', compact);
+  fitBars();   // re-evaluate which bars fit at the new height
 }
 window.addEventListener('resize', updateLayout);
 updateLayout();
