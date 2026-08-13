@@ -2,7 +2,7 @@
 # usage-tracker-for-claude
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-0.1.0-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-0.2.1-brightgreen.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-0078D6.svg)
 ![Built with Electron](https://img.shields.io/badge/built%20with-Electron-47848F.svg?logo=electron&logoColor=white)
 
@@ -62,6 +62,12 @@ live data, no reload.
 
 The same app runs as a **menu-bar** icon on macOS (popup drops from the menu
 bar, Dock icon hidden).
+
+> **Heads-up:** these builds aren't notarized by Apple ($99/yr developer
+> program), so Gatekeeper will resist them — and on the **latest macOS +
+> Apple Silicon** it may hard-block the download entirely, where even the
+> workarounds below don't help. If a `.dmg` won't open there, **run from
+> source** (below) — that always works. Windows has no such restriction.
 
 - **Download:** grab the `.dmg` from the
   **[Releases](https://github.com/HubbyLight/usage-tracker-for-claude/releases)**
