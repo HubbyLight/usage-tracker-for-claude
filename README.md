@@ -70,8 +70,19 @@ bar, Dock icon hidden).
 - **Build it yourself on a Mac:** `npm install && npm run dist:mac` → `.dmg`
   appears in `dist/`.
 
-The build is unsigned, so on first launch **right-click the app → Open**
-(or run `xattr -cr "/Applications/Claude Usage.app"` once).
+**First launch (unsigned app).** The build isn't signed with an Apple Developer
+certificate ($99/yr), so macOS quarantines it on download and may say _"…will
+damage your computer"_ / _"is damaged and can't be opened."_ That's Gatekeeper
+blocking an unsigned download, not actual malware. To run it:
+
+1. Drag **Claude Usage.app** into your **Applications** folder.
+2. Open **Terminal** (Spotlight `⌘Space` → type `Terminal`), then run — you can
+   type `xattr -cr ` and **drag the app onto the Terminal window** to fill the path:
+   ```bash
+   xattr -cr "/Applications/Claude Usage.app"
+   ```
+3. Open the app normally. (This clears the download-quarantine flag; you only do
+   it once.)
 
 ### For developers (run from source)
 

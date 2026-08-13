@@ -62,7 +62,14 @@ jobs:
           body: |
             Download for your platform below.
 
-            - **Windows** — `.exe` (portable, just run it)
-            - **macOS** — `.dmg`; the app is unsigned, so on first launch
-              right-click the app → **Open** (or run
-              `xattr -cr "/Applications/Claude Usage.app"` once).
+            **Windows** — `.exe` (portable, just run it).
+
+            **macOS** — `.dmg`. The app isn't signed with an Apple Developer
+            certificate, so macOS quarantines it and may say *"…will damage your
+            computer"* / *"is damaged."* That's Gatekeeper blocking an unsigned
+            download, not malware. To run it:
+            1. Drag **Claude Usage.app** into **Applications**.
+            2. Open **Terminal** and run (type `xattr -cr ` then drag the app
+               onto the window to fill the path):
+               `xattr -cr "/Applications/Claude Usage.app"`
+            3. Open the app normally — you only do this once.
