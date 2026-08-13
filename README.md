@@ -107,9 +107,16 @@ npm start
 ```
 
 The `xattr` line is only needed on macOS — it clears the download-quarantine
-flag so the app can launch (skip it on Windows). If you started the app before
-running it and got _"electron will damage your computer,"_ that's why: run the
-`xattr` line, then `npm start` again.
+flag so the app can launch (skip it on Windows).
+
+**Still getting _"Electron will damage your computer"_ / a `SIGKILL`?** Recent
+macOS (Sequoia) also needs the Electron binary re-signed locally. Run both of
+these (copy from this page so the `-` isn't mangled), then `npm start` again:
+
+```bash
+sudo xattr -rd com.apple.quarantine -r node_modules/electron/dist/Electron.app
+codesign --force --deep --sign - node_modules/electron/dist/Electron.app
+```
 
 It ships with **demo mode off**, so it reads your real usage after you sign in.
 (Flip `DEMO_MODE = true` in `main.js` to preview the UI with fake numbers.)
