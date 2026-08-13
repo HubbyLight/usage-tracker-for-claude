@@ -70,19 +70,28 @@ bar, Dock icon hidden).
 - **Build it yourself on a Mac:** `npm install && npm run dist:mac` → `.dmg`
   appears in `dist/`.
 
-**First launch (unsigned app).** The build isn't signed with an Apple Developer
-certificate ($99/yr), so macOS quarantines it on download and may say _"…will
-damage your computer"_ / _"is damaged and can't be opened."_ That's Gatekeeper
-blocking an unsigned download, not actual malware. To run it:
+**First launch (unsigned app).** The build isn't signed with a paid Apple
+Developer certificate, so macOS quarantines it and may say _"…will damage your
+computer"_ / _"is damaged and can't be opened."_ That's Gatekeeper blocking an
+unsigned download, not actual malware.
+
+> **Copy the commands below from this page** (not from a chat app — messengers
+> silently turn `"` and `-` into look-alike characters that break the command).
 
 1. Drag **Claude Usage.app** into your **Applications** folder.
-2. Open **Terminal** (Spotlight `⌘Space` → type `Terminal`), then run — you can
-   type `xattr -cr ` and **drag the app onto the Terminal window** to fill the path:
+2. Open **Terminal** (Spotlight `⌘Space` → type `Terminal`), paste these two
+   lines, and press Return after each:
    ```bash
    xattr -cr "/Applications/Claude Usage.app"
+   codesign --force --deep --sign - "/Applications/Claude Usage.app"
    ```
-3. Open the app normally. (This clears the download-quarantine flag; you only do
-   it once.)
+   The first clears the download-quarantine flag; the second re-signs the app
+   locally so Apple Silicon will run it. (If macOS offers to install the Command
+   Line Developer Tools, accept — it's a one-time system component.)
+3. Open the app normally. You only do this once.
+
+Still blocked, or prefer no Terminal? **Run it from source instead** (next
+section) — that path has no Gatekeeper step at all.
 
 ### For developers (run from source)
 
