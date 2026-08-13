@@ -29,9 +29,6 @@ jobs:
             args: --mac
             name: macos
     runs-on: ${{ matrix.os }}
-    env:
-      # No signing certificates in CI — build unsigned instead of failing.
-      CSC_IDENTITY_AUTO_DISCOVERY: "false"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
