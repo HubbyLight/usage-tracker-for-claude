@@ -93,14 +93,23 @@ unsigned download, not actual malware.
 Still blocked, or prefer no Terminal? **Run it from source instead** (next
 section) — that path has no Gatekeeper step at all.
 
-### For developers (run from source)
+### Run from source (no Gatekeeper hassle)
+
+Needs [Node.js](https://nodejs.org) (any recent version — 18/20/22 LTS; 19 also
+works). In **Terminal**, run these in order:
 
 ```bash
 git clone https://github.com/HubbyLight/usage-tracker-for-claude.git
 cd usage-tracker-for-claude
 npm install
+xattr -cr node_modules/electron/dist/Electron.app
 npm start
 ```
+
+The `xattr` line is only needed on macOS — it clears the download-quarantine
+flag so the app can launch (skip it on Windows). If you started the app before
+running it and got _"electron will damage your computer,"_ that's why: run the
+`xattr` line, then `npm start` again.
 
 It ships with **demo mode off**, so it reads your real usage after you sign in.
 (Flip `DEMO_MODE = true` in `main.js` to preview the UI with fake numbers.)
