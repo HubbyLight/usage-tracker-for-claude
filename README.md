@@ -63,10 +63,12 @@ live data, no reload.
 The same app runs as a **menu-bar** icon on macOS (popup drops from the menu
 bar, Dock icon hidden).
 
-- **No Mac needed to build:** this repo ships a GitHub Actions workflow —
-  go to the **Actions** tab → **Build** → _Run workflow_, then download the
-  `macos` artifact (`.dmg` / `.zip`) from the finished run.
-- **On a Mac:** `npm install && npm run dist:mac` → `.dmg` appears in `dist/`.
+- **Download:** grab the `.dmg` from the
+  **[Releases](https://github.com/HubbyLight/usage-tracker-for-claude/releases)**
+  tab (a public, login-free link — built on GitHub's macOS runners, no Mac of
+  your own needed).
+- **Build it yourself on a Mac:** `npm install && npm run dist:mac` → `.dmg`
+  appears in `dist/`.
 
 The build is unsigned, so on first launch **right-click the app → Open**
 (or run `xattr -cr "/Applications/Claude Usage.app"` once).

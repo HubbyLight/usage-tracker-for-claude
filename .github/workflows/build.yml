@@ -1,13 +1,21 @@
 name: Build
 
 # Builds distributable apps on GitHub's machines — including the macOS .dmg,
-# which cannot be produced on Windows. Run it from the repo's Actions tab
-# ("Run workflow"), or push a tag like v0.2.0. Download the results from the
-# run's "Artifacts" section.
+# which cannot be produced on Windows.
+#
+#   - Push a version tag (e.g. `git tag v0.2.0 && git push origin v0.2.0`) to
+#     build BOTH platforms and publish a public GitHub Release with the
+#     .dmg / .exe / .zip attached — that's the easy, login-free download link
+#     shown on the repo's front page.
+#   - Or use the Actions tab -> "Run workflow" to just build and grab the files
+#     from the run's Artifacts (requires being signed in to GitHub).
 on:
   workflow_dispatch:
   push:
     tags: ['v*']
+
+permissions:
+  contents: write        # needed to create the Release on tag builds
 
 jobs:
   build:
@@ -32,6 +40,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx electron-builder ${{ matrix.args }} --publish never
+      # Always upload build outputs as run artifacts (handy for dispatch runs).
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}
@@ -39,3 +48,21 @@ jobs:
             dist/*.exe
             dist/*.dmg
             dist/*.zip
+      # On a version tag, attach the same files to a public GitHub Release so
+      # anyone can download them directly — no login, no Actions navigation.
+      - name: Publish to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.zip
+          fail_on_unmatched_files: false
+          body: |
+            Download for your platform below.
+
+            - **Windows** — `.exe` (portable, just run it)
+            - **macOS** — `.dmg`; the app is unsigned, so on first launch
+              right-click the app → **Open** (or run
+              `xattr -cr "/Applications/Claude Usage.app"` once).
