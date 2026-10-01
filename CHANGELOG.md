@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.7 — unreleased
+## 0.2.7 — 2026-10-02
 
 - **Security: Electron 31 → 44.** 31 was long out of support; the sign-in
   window renders live web pages, so it needs current Chromium security fixes.
