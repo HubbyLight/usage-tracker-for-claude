@@ -14,7 +14,8 @@ raw-usage.json
 
 # --- Electron / Chromium session + login data (DEFENSIVE) ---------------------
 # The persist:claude login session normally lives in the OS userData dir
-# (%APPDATA%\claude-usage-tray on Windows), OUTSIDE this folder, so it is not
+# (%APPDATA%\claude-usage-tracker on Windows,
+# ~/Library/Application Support/claude-usage-tracker on macOS), OUTSIDE this folder, so it is not
 # committed. These entries are a safety net in case any of that data ever ends
 # up inside the repo (e.g. a copied userData dir or a relocated userData path):
 # they hold auth cookies and would leak your logged-in session if published.

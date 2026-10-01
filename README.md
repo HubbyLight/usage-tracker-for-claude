@@ -30,7 +30,7 @@ live data, no reload.
 
 ## ✨ Features
 
-- **Zero-dependency ring gauges** — the concentric usage rings on the taskbar icon
+- **Zero-dependency ring gauges** — the concentric usage rings on the tray / menu-bar icon
   are drawn by hand: raw RGBA pixel math wrapped in a from-scratch PNG encoder, no
   canvas or graphics library. It stays tiny and fast.
 - **Live reset countdowns** — see exactly when your 5-hour and weekly windows roll over.
@@ -180,7 +180,8 @@ module.exports = {
 ```
 
 Find `<your-org-uuid>` via claude.ai → Settings → Usage with DevTools open
-(F12 → Network → Fetch/XHR → look for the `usage` request's URL).
+(F12 on Windows / ⌥⌘I on macOS → Network → Fetch/XHR → look for the `usage`
+request's URL).
 </details>
 
 ---
@@ -233,7 +234,10 @@ The workflow builds Windows and macOS in parallel and attaches the `.exe`,
   exports, or uploads your cookies — requests run inside that window, so the
   browser attaches them as it would on claude.ai.
 - **On disk:** only `settings.json` (notification toggle) and
-  `popup-bounds.json` (window position) in the app's user-data folder.
+  `popup-bounds.json` (window position), next to the claude.ai login session, in
+  the app's user-data folder — `%APPDATA%\claude-usage-tracker` on Windows,
+  `~/Library/Application Support/claude-usage-tracker` on macOS. Delete that
+  folder to sign out and reset everything.
 - **No auto-start without asking:** launch-at-login is off until you enable it
   from the tray menu.
 - **Antivirus warnings:** unsigned Electron apps are sometimes flagged by
