@@ -45,6 +45,17 @@ jobs:
             dist/*.exe
             dist/*.dmg
             dist/*.zip
+      # SHA-256 checksums next to each binary so users (and AV vendors handling a
+      # false-positive report) can confirm a download is the CI-built original.
+      - name: Write checksums
+        shell: bash
+        run: |
+          cd dist
+          shopt -s nullglob
+          for f in *.exe *.dmg *.zip; do
+            if command -v sha256sum >/dev/null; then sha256sum "$f"; else shasum -a 256 "$f"; fi > "$f.sha256"
+          done
+          cat *.sha256
       # On a version tag, attach the same files to a public GitHub Release so
       # anyone can download them directly — no login, no Actions navigation.
       - name: Publish to Release
@@ -55,18 +66,24 @@ jobs:
             dist/*.exe
             dist/*.dmg
             dist/*.zip
+            dist/*.sha256
           fail_on_unmatched_files: false
           body: |
-            Download for your platform below.
+            Download for your platform below. Each file has a matching `.sha256`
+            checksum — every binary here is built from this tag's source by the
+            public GitHub Actions workflow (`.github/workflows/build.yml`).
 
-            **Windows** — `.exe` (portable, just run it).
+            **What the app does:** it opens claude.ai in its own window so you can
+            sign in, then reads only `claude.ai/api/organizations/…/usage` with that
+            session. It contacts no other server, and launch-at-login stays off
+            unless you turn it on from the tray menu.
 
-            **macOS** — `.dmg`. The app isn't signed with an Apple Developer
-            certificate, so macOS quarantines it and may say *"…will damage your
-            computer"* / *"is damaged."* That's Gatekeeper blocking an unsigned
-            download, not malware. To run it:
-            1. Drag **Claude Usage.app** into **Applications**.
-            2. Open **Terminal** and run (type `xattr -cr ` then drag the app
-               onto the window to fill the path):
-               `xattr -cr "/Applications/Claude Usage.app"`
-            3. Open the app normally — you only do this once.
+            **Windows** — `.exe` (portable, just run it). It isn't code-signed, so
+            SmartScreen may warn: click **More info → Run anyway**.
+
+            **macOS** — `.dmg`. It isn't notarized by Apple, so Gatekeeper may
+            refuse to open it. Steps to allow it are in the
+            [README](https://github.com/HubbyLight/usage-tracker-for-claude#macos);
+            if you'd rather not run Terminal commands, use the
+            [run-from-source](https://github.com/HubbyLight/usage-tracker-for-claude#run-from-source-no-gatekeeper-hassle)
+            option instead.

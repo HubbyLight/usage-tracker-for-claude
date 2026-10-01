@@ -525,6 +525,15 @@ function startPolling() {
   pollTimer = setInterval(poll, POLL_SECONDS * 1000);
 }
 
+/* ---- launch at login: strictly opt-in via the tray menu. The Windows build is
+        a portable exe that unpacks itself to %TEMP% on every run, so
+        process.execPath points at a throwaway temp copy — register the real
+        .exe the user downloaded (electron-builder exposes it in this env var). ---- */
+function loginItemOpts() {
+  const portable = process.env.PORTABLE_EXECUTABLE_FILE;
+  return portable ? { path: portable } : {};
+}
+
 function buildTray() {
   tray = new Tray(baseTrayImage());
   const menu = Menu.buildFromTemplate([
@@ -532,10 +541,13 @@ function buildTray() {
     { label: 'Sign in to Claude…', click: () => showLogin() },
     { type: 'separator' },
     {
-      label: 'Start with Windows',
+      label: IS_MAC ? 'Open at Login' : 'Start with Windows',
       type: 'checkbox',
-      checked: app.getLoginItemSettings().openAtLogin,
-      click: (item) => app.setLoginItemSettings({ openAtLogin: item.checked }),
+      checked: app.getLoginItemSettings(loginItemOpts()).openAtLogin,
+      // A dev run (`npm start`) would register node_modules/electron as the
+      // startup target, which breaks on the next reinstall — packaged only.
+      enabled: app.isPackaged,
+      click: (item) => app.setLoginItemSettings({ ...loginItemOpts(), openAtLogin: item.checked }),
     },
     {
       label: 'Desktop notifications (70% / 90% / 100%)',
@@ -561,12 +573,6 @@ app.whenReady().then(() => {
   if (process.platform === 'win32') app.setAppUserModelId('CLAUDE USAGE TRACKER');
   // Menu-bar-only app on macOS — no Dock icon.
   if (IS_MAC && app.dock) app.dock.hide();
-  // Auto-launch on Windows sign-in once this is the packaged app (a dev run via
-  // `npm start` would otherwise register node_modules/electron.exe as the
-  // startup target, which breaks the next time you reinstall deps).
-  if (app.isPackaged && !app.getLoginItemSettings().openAtLogin) {
-    app.setLoginItemSettings({ openAtLogin: true });
-  }
   createPopup();
   createClaudeWindow();
   buildTray();

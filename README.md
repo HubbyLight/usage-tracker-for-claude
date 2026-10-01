@@ -2,7 +2,7 @@
 # usage-tracker-for-claude
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-0.2.1-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-0.2.2-brightgreen.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-0078D6.svg)
 ![Built with Electron](https://img.shields.io/badge/built%20with-Electron-47848F.svg?logo=electron&logoColor=white)
 
@@ -41,7 +41,8 @@ live data, no reload.
   your logged-in session and keeps working even if you switch accounts.
 - **Smart popup** — remembers its position/size, pin it to keep it open, or let it
   snap to the corner and auto-hide.
-- **Launch at startup** — one toggle in the tray menu (Windows & macOS).
+- **Launch at startup** — opt-in toggle in the tray menu (Windows & macOS); off
+  until you turn it on.
 - **Reads only your own data, in your own session** — the request runs inside a
   logged-in claude.ai window using your own cookies. Nothing is sent anywhere else.
 
@@ -52,11 +53,27 @@ live data, no reload.
 ### For users (just want to run it)
 
 1. Go to the **[Releases](https://github.com/HubbyLight/usage-tracker-for-claude/releases)** tab.
-2. Download the latest `ClaudeUsage.exe` (portable — no installer needed).
+2. Download the latest `Claude.Usage.<version>.exe` (portable — no installer needed).
+   Windows SmartScreen may warn because the exe isn't code-signed: **More info →
+   Run anyway**.
 3. Run it. On first launch, click **"Sign in to Claude"** and log in once — the
    session persists, and your numbers go live.
 
-> _(No releases yet? See "Publishing a release" below to build and upload the `.exe`.)_
+### Verifying a download
+
+Every release file is built by the public
+[GitHub Actions workflow](.github/workflows/build.yml) from the tagged source and
+ships with a `.sha256` checksum. To check one:
+
+```bash
+shasum -a 256 Claude.Usage.0.2.2.exe          # macOS / Linux
+```
+
+```powershell
+Get-FileHash Claude.Usage.0.2.2.exe            # Windows PowerShell
+```
+
+The hash should match the `.sha256` file next to it on the Releases page.
 
 ### macOS
 
@@ -79,7 +96,8 @@ bar, Dock icon hidden).
 **First launch (unsigned app).** The build isn't signed with a paid Apple
 Developer certificate, so macOS quarantines it and may say _"…will damage your
 computer"_ / _"is damaged and can't be opened."_ That's Gatekeeper blocking an
-unsigned download, not actual malware.
+unsigned download. The app's full source is in this repo, and the Releases are
+built from it by GitHub Actions (see _Verifying a download_ above).
 
 > **Copy the commands below from this page** (not from a chat app — messengers
 > silently turn `"` and `-` into look-alike characters that break the command).
@@ -187,6 +205,25 @@ npm run dist
 
 This produces a portable executable in `dist/`. Create a **Release** on GitHub and
 attach that file so it appears under the Releases tab.
+
+---
+
+## 🔒 Privacy & security
+
+- **Network:** the app only talks to `claude.ai` — the sign-in page you log in to,
+  plus `GET /api/organizations` and `GET /api/organizations/<uuid>/usage`. There
+  is no telemetry, analytics, or other server.
+- **Your session stays local:** the claude.ai login lives in Electron's own
+  profile on your machine (`persist:claude` partition). The app never reads,
+  exports, or uploads your cookies — requests run inside that window, so the
+  browser attaches them as it would on claude.ai.
+- **On disk:** only `settings.json` (notification toggle) and
+  `popup-bounds.json` (window position) in the app's user-data folder.
+- **No auto-start without asking:** launch-at-login is off until you enable it
+  from the tray menu.
+- **Antivirus warnings:** unsigned Electron apps are sometimes flagged by
+  heuristic scanners. If yours flags a release file, check its hash (above) and
+  please [open an issue](https://github.com/HubbyLight/usage-tracker-for-claude/issues).
 
 ---
 
