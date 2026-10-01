@@ -54,22 +54,66 @@ live data, no reload.
 
 ## 🚀 Installation & Setup
 
-### For users (just want to run it)
+Download from the **[Releases](https://github.com/HubbyLight/usage-tracker-for-claude/releases)**
+page, then follow the steps for your platform. On first launch, right-click the
+tray / menu-bar icon → **Sign in to Claude** and log in once; the session
+persists and your numbers go live.
 
-1. Go to the **[Releases](https://github.com/HubbyLight/usage-tracker-for-claude/releases)** tab.
-2. Download the latest `Claude.Usage.<version>.exe` (portable — no installer needed).
-   Windows SmartScreen may warn because the exe isn't code-signed: **More info →
-   Run anyway**.
-3. Run it. On first launch, click **"Sign in to Claude"** and log in once — the
-   session persists, and your numbers go live.
+### Windows
+
+1. Download `Claude.Usage.<version>.exe`. It's portable, so there's nothing to
+   install.
+2. Run it. SmartScreen may warn because the exe isn't code-signed: click
+   **More info → Run anyway**.
+
+### macOS
+
+Runs as a menu-bar icon (no Dock icon). The build isn't notarized by Apple, so
+macOS blocks it until you clear the download flag once. Tested on macOS 27
+(Apple Silicon).
+
+> **Copy the commands below from this page**, not from a chat app. Messengers
+> silently turn `"` and `-` into look-alike characters that break the command.
+
+1. Download `Claude.Usage-<version>-universal.dmg`, open it, and drag
+   **Claude Usage.app** into **Applications**.
+2. Open **Terminal** (Spotlight `⌘Space` → type `Terminal`), paste these two
+   lines, and press Return after each:
+   ```bash
+   xattr -cr "/Applications/Claude Usage.app"
+   codesign --force --deep --sign - "/Applications/Claude Usage.app"
+   ```
+   The first clears the download-quarantine flag; the second re-signs the app
+   locally so Apple Silicon will run it. If macOS offers to install the Command
+   Line Developer Tools, accept; it's a one-time system component.
+3. Open the app normally. The `.dmg` can be deleted afterwards.
+
+<details>
+<summary>Why does macOS say the app "is damaged"?</summary>
+
+Without a paid Apple Developer certificate, macOS quarantines the download and
+shows _"…will damage your computer"_ or _"is damaged and can't be opened."_
+That's Gatekeeper refusing an unnotarized app, and right-click → Open doesn't
+get past it. The two Terminal lines above do. The full source is in this repo,
+and every release is built from it by GitHub Actions (see
+_Verifying a download_ below).
+</details>
+
+<details>
+<summary>Updating to a new version</summary>
+
+Right-click the menu-bar icon → **Quit**, drag the new **Claude Usage.app**
+from the new `.dmg` over the old one in Applications, and run the two Terminal
+lines again (every new download is quarantined afresh). If macOS asks to let
+Claude Usage use its "Safe Storage" keychain item, choose **Always Allow**.
+</details>
 
 ### Verifying a download
 
 Every release file is built by the public
 [GitHub Actions workflow](.github/workflows/build.yml) from the tagged source and
-ships with a `.sha256` checksum. To check one:
-
-Download the file **and** its `.sha256` into the same folder, then:
+ships with a `.sha256` checksum. Download the file **and** its `.sha256` into
+the same folder, then:
 
 ```bash
 shasum -a 256 -c Claude.Usage.0.2.7.exe.sha256   # macOS / Linux → "OK"
@@ -81,55 +125,7 @@ Get-FileHash Claude.Usage.0.2.7.exe              # Windows PowerShell
 
 On Windows, compare the printed hash with the one inside the `.sha256` file.
 
-### macOS
-
-The same app runs as a **menu-bar** icon on macOS (popup drops from the menu
-bar, Dock icon hidden).
-
-> **Heads-up:** these builds aren't notarized by Apple ($99/yr developer
-> program), so Gatekeeper will resist them — and on the **latest macOS +
-> Apple Silicon** it may hard-block the download entirely, where even the
-> workarounds below don't help. If a `.dmg` won't open there, **run from
-> source** (below) — that always works. Windows has no such restriction.
-
-- **Download:** grab the `.dmg` from the
-  **[Releases](https://github.com/HubbyLight/usage-tracker-for-claude/releases)**
-  tab (a public, login-free link — built on GitHub's macOS runners, no Mac of
-  your own needed).
-- **Build it yourself on a Mac:** `npm install && npm run dist:mac` → `.dmg`
-  appears in `dist/`.
-
-**First launch (unsigned app).** The build isn't signed with a paid Apple
-Developer certificate, so macOS quarantines it and may say _"…will damage your
-computer"_ / _"is damaged and can't be opened."_ That's Gatekeeper blocking an
-unsigned download. The app's full source is in this repo, and the Releases are
-built from it by GitHub Actions (see _Verifying a download_ above).
-
-> **Copy the commands below from this page** (not from a chat app — messengers
-> silently turn `"` and `-` into look-alike characters that break the command).
-
-1. Drag **Claude Usage.app** into your **Applications** folder.
-2. Open **Terminal** (Spotlight `⌘Space` → type `Terminal`), paste these two
-   lines, and press Return after each:
-   ```bash
-   xattr -cr "/Applications/Claude Usage.app"
-   codesign --force --deep --sign - "/Applications/Claude Usage.app"
-   ```
-   The first clears the download-quarantine flag; the second re-signs the app
-   locally so Apple Silicon will run it. (If macOS offers to install the Command
-   Line Developer Tools, accept — it's a one-time system component.)
-3. Open the app normally. You only do this once per download.
-
-**Updating.** Right-click the menu-bar icon → **Quit**, drag the new
-**Claude Usage.app** from the new `.dmg` over the old one in Applications, and
-run the two Terminal lines above again (each new download is quarantined
-afresh). After that the `.dmg` itself can be deleted — the app lives in
-Applications; the `.dmg` is only the box it ships in.
-
-Still blocked, or prefer no Terminal? **Run it from source instead** (next
-section) — that path has no Gatekeeper step at all.
-
-### Run from source (no Gatekeeper hassle)
+### Run from source
 
 Needs [Node.js](https://nodejs.org) 22 or newer (the current LTS is fine). In
 **Terminal**, run these in order:
@@ -142,18 +138,23 @@ npm start
 ```
 
 The first `npm start` downloads the Electron runtime, so it takes a moment.
-
-**Getting _"Electron will damage your computer"_ / a `SIGKILL` on macOS?**
-Clear the quarantine flag and re-sign the Electron binary locally (copy from
-this page so the `-` isn't mangled), then `npm start` again:
-
-```bash
-sudo xattr -rd com.apple.quarantine -r node_modules/electron/dist/Electron.app
-codesign --force --deep --sign - node_modules/electron/dist/Electron.app
-```
-
 It ships with **demo mode off**, so it reads your real usage after you sign in.
 (Flip `DEMO_MODE = true` in `main.js` to preview the UI with fake numbers.)
+
+<details>
+<summary>macOS: "Electron will damage your computer" or a <code>SIGKILL</code></summary>
+
+Clear the quarantine flag and re-sign the Electron binary locally, then
+`npm start` again:
+
+```bash
+xattr -rd com.apple.quarantine node_modules/electron/dist/Electron.app
+codesign --force --deep --sign - node_modules/electron/dist/Electron.app
+```
+</details>
+
+To build installers yourself: `npm run dist` (Windows `.exe`) or
+`npm run dist:mac` (macOS `.dmg` / `.zip`), output in `dist/`.
 
 ### Configuration — usually none needed
 

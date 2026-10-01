@@ -88,9 +88,7 @@ jobs:
             **Windows** — `.exe` (portable, just run it). It isn't code-signed, so
             SmartScreen may warn: click **More info → Run anyway**.
 
-            **macOS** — `.dmg`. It isn't notarized by Apple, so Gatekeeper may
-            refuse to open it. Steps to allow it are in the
-            [README](https://github.com/HubbyLight/usage-tracker-for-claude#macos);
-            if you'd rather not run Terminal commands, use the
-            [run-from-source](https://github.com/HubbyLight/usage-tracker-for-claude#run-from-source-no-gatekeeper-hassle)
-            option instead.
+            **macOS** — `.dmg`. It isn't notarized by Apple, so macOS blocks it
+            until you run two Terminal commands once; see the
+            [macOS steps](https://github.com/HubbyLight/usage-tracker-for-claude#macos)
+            in the README.
