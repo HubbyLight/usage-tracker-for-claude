@@ -14,6 +14,9 @@ Click the tray / menu-bar icon to open a popup with both percentages and live
 countdowns; click it again to close it. Right-click for the menu (**Refresh now**,
 sign in, launch at login, notifications, quit). The tray icon itself is a tiny dual-ring gauge that fills as your usage climbs.
 
+📓 **[How it was built](docs/ENGINEERING.md)** — design decisions, trade-offs, and
+the bugs worth telling. · 📝 **[Changelog](CHANGELOG.md)**
+
 > _Unofficial, community-built tool. Not affiliated with, endorsed by, or
 > sponsored by Anthropic. "Claude" is a trademark of Anthropic._
 
@@ -261,5 +264,6 @@ The workflow builds Windows and macOS in parallel and attaches the `.exe`,
 
 Released under the **[MIT License](LICENSE)** — free to use, modify, and share.
 
-Created by **[@HubbyLight](https://github.com/HubbyLight)**. Built with Claude as a
-pair-programming assistant; I owned the architecture and security decisions.
+Created by **[@HubbyLight](https://github.com/HubbyLight)** · maintained since July 2026.
+Built with Claude as a pair-programming assistant; I owned the architecture and
+security decisions.
