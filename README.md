@@ -2,7 +2,7 @@
 # usage-tracker-for-claude
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-0.2.2-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-0.2.3-brightgreen.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-0078D6.svg)
 ![Built with Electron](https://img.shields.io/badge/built%20with-Electron-47848F.svg?logo=electron&logoColor=white)
 
@@ -66,11 +66,11 @@ Every release file is built by the public
 ships with a `.sha256` checksum. To check one:
 
 ```bash
-shasum -a 256 Claude.Usage.0.2.2.exe          # macOS / Linux
+shasum -a 256 Claude.Usage.0.2.3.exe          # macOS / Linux
 ```
 
 ```powershell
-Get-FileHash Claude.Usage.0.2.2.exe            # Windows PowerShell
+Get-FileHash Claude.Usage.0.2.3.exe            # Windows PowerShell
 ```
 
 The hash should match the `.sha256` file next to it on the Releases page.

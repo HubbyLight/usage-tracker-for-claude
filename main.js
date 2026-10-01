@@ -347,7 +347,14 @@ function createPopup() {
     if (onScreen) { popup.setPosition(saved.x, saved.y); userPlaced = true; }
   }
   popup.on('blur', () => {
-    if (popup && !popupPinned && !popup.webContents.isDevToolsOpened()) popup.hide();
+    if (popup && !popupPinned && !popup.webContents.isDevToolsOpened()) {
+      // Stamp the time here, not only in the 'hide' event: on macOS that event
+      // arrives asynchronously (window occlusion notification), i.e. AFTER the
+      // tray click that caused this blur — so togglePopup's guard would miss it
+      // and reopen the popup instantly.
+      popupHiddenAt = Date.now();
+      popup.hide();
+    }
   });
   popup.on('hide', () => { popupHiddenAt = Date.now(); });
   popup.on('moved', () => { userPlaced = true; saveBounds(); });
