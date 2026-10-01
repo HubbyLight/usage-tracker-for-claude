@@ -1,6 +1,6 @@
 {
   "name": "claude-usage-tracker",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Tray / menu-bar app that tracks your Claude.ai 5-hour and weekly usage at a glance",
   "main": "main.js",
   "license": "MIT",
@@ -11,8 +11,8 @@
     "sync-install": "node scripts/sync-install.js"
   },
   "devDependencies": {
-    "electron": "^31.3.1",
-    "electron-builder": "^24.13.3"
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3"
   },
   "build": {
     "appId": "com.claudeusage.tracker",
@@ -23,13 +23,26 @@
     },
     "mac": {
       "target": [
-        { "target": "dmg", "arch": "universal" },
-        { "target": "zip", "arch": "universal" }
+        {
+          "target": "dmg",
+          "arch": "universal"
+        },
+        {
+          "target": "zip",
+          "arch": "universal"
+        }
       ],
       "icon": "icon-512.png",
       "category": "public.app-category.utilities",
       "identity": "-",
       "hardenedRuntime": false
+    },
+    "electronFuses": {
+      "runAsNode": false,
+      "enableCookieEncryption": true,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "onlyLoadAppFromAsar": true
     }
   }
 }

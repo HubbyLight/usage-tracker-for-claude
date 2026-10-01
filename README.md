@@ -2,7 +2,7 @@
 # usage-tracker-for-claude
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-0.2.6-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-0.2.7-brightgreen.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-0078D6.svg)
 ![Built with Electron](https://img.shields.io/badge/built%20with-Electron-47848F.svg?logo=electron&logoColor=white)
 
@@ -72,11 +72,11 @@ ships with a `.sha256` checksum. To check one:
 Download the file **and** its `.sha256` into the same folder, then:
 
 ```bash
-shasum -a 256 -c Claude.Usage.0.2.6.exe.sha256   # macOS / Linux → "OK"
+shasum -a 256 -c Claude.Usage.0.2.7.exe.sha256   # macOS / Linux → "OK"
 ```
 
 ```powershell
-Get-FileHash Claude.Usage.0.2.6.exe              # Windows PowerShell
+Get-FileHash Claude.Usage.0.2.7.exe              # Windows PowerShell
 ```
 
 On Windows, compare the printed hash with the one inside the `.sha256` file.
@@ -131,23 +131,21 @@ section) — that path has no Gatekeeper step at all.
 
 ### Run from source (no Gatekeeper hassle)
 
-Needs [Node.js](https://nodejs.org) (any recent version — 18/20/22 LTS; 19 also
-works). In **Terminal**, run these in order:
+Needs [Node.js](https://nodejs.org) 22 or newer (the current LTS is fine). In
+**Terminal**, run these in order:
 
 ```bash
 git clone https://github.com/HubbyLight/usage-tracker-for-claude.git
 cd usage-tracker-for-claude
 npm install
-xattr -cr node_modules/electron/dist/Electron.app
 npm start
 ```
 
-The `xattr` line is only needed on macOS — it clears the download-quarantine
-flag so the app can launch (skip it on Windows).
+The first `npm start` downloads the Electron runtime, so it takes a moment.
 
-**Still getting _"Electron will damage your computer"_ / a `SIGKILL`?** Recent
-macOS (Sequoia) also needs the Electron binary re-signed locally. Run both of
-these (copy from this page so the `-` isn't mangled), then `npm start` again:
+**Getting _"Electron will damage your computer"_ / a `SIGKILL` on macOS?**
+Clear the quarantine flag and re-sign the Electron binary locally (copy from
+this page so the `-` isn't mangled), then `npm start` again:
 
 ```bash
 sudo xattr -rd com.apple.quarantine -r node_modules/electron/dist/Electron.app
@@ -218,7 +216,7 @@ Releases are built and published by
 2. Commit and push to `main`.
 3. Tag and push the tag:
    ```bash
-   git tag v0.2.6 && git push origin v0.2.6
+   git tag v0.2.7 && git push origin v0.2.7
    ```
 
 The workflow builds Windows and macOS in parallel and attaches the `.exe`,
@@ -237,10 +235,14 @@ The workflow builds Windows and macOS in parallel and attaches the `.exe`,
   exports, or uploads your cookies — requests run inside that window, so the
   browser attaches them as it would on claude.ai. Links you click in that
   window open in your default browser, not inside the logged-in session.
-- **Known limitation:** Electron stores that login cookie on disk without
-  encrypting it (the file is readable only by your user account). A real
-  browser encrypts it with the OS keychain. Turning on Electron's cookie
-  encryption is planned.
+- **Encrypted at rest:** that login cookie is encrypted on disk with a key
+  kept in the OS keychain (macOS) / DPAPI (Windows), the same way Chrome does
+  it. On macOS you may be asked once per update to let **Claude Usage** use
+  its "Safe Storage" keychain item: choose **Always Allow** (choosing Deny just
+  signs you out).
+- **Locked-down runtime:** release builds can't be started as a plain Node.js
+  runtime (`ELECTRON_RUN_AS_NODE`), ignore `NODE_OPTIONS` and `--inspect`, and
+  only load the app code packed inside them.
 - **On disk:** only `settings.json` (notification toggle) and
   `popup-bounds.json` (window position), next to the claude.ai login session, in
   the app's user-data folder — `%APPDATA%\claude-usage-tracker` on Windows,

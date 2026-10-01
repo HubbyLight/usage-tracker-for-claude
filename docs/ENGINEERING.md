@@ -94,6 +94,24 @@ pair-programming assistant, and the README says that too.
 
 ---
 
+### 7. Locking down the runtime (0.2.7)
+
+A security pass turned up two problems. The first was that the login cookie
+sat on disk unencrypted, because Electron leaves cookie encryption off unless
+you turn it on. I checked the actual cookie database to confirm it rather than
+assume. The second was Electron 31, which was long out of support, in an app
+whose sign-in window renders live web pages.
+
+The app is now on Electron 44, and the release builds flip Electron's "fuses"
+(switches compiled into the binary). Cookie encryption is on, so the session
+is protected by the OS keychain the way Chrome protects it. `RunAsNode`,
+`NODE_OPTIONS`, and `--inspect` are off, so nobody can reuse the signed app
+binary as a general-purpose Node.js runtime, and the app only loads code from
+its own `app.asar`. I verified the fuses by reading them back from a local
+build.
+
+---
+
 ## Bugs that took some digging
 
 ### Notifications that kept repeating ([`e064a4f`](https://github.com/HubbyLight/usage-tracker-for-claude/commit/e064a4f))
@@ -164,14 +182,6 @@ the latest macOS may still block a download that Apple hasn't notarized.
 Real code signing (an Apple Developer ID with notarization, and Authenticode
 on Windows) is the actual fix for the antivirus and Gatekeeper trouble.
 Everything above works around the problem without solving it.
-
-The login cookie is also stored on disk unencrypted, because Electron leaves
-cookie encryption off by default. Turning on its `EnableCookieEncryption`
-fuse would put it behind the OS keychain the way Chrome does. The same change
-should switch off the `RunAsNode` fuse, which lets anyone launch the app's
-binary as a plain Node.js runtime. Upgrading Electron also belongs on this
-list: 31 is long past end of life, and the sign-in window renders live web
-pages.
 
 I'd also add tests for `parseUsage()` and the notification re-arm logic. Both
 are pure functions, so they're easy to test, and a regression in either would

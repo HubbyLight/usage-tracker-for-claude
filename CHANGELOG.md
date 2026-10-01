@@ -1,6 +1,19 @@
 # Changelog
 
-## 0.2.6 — unreleased
+## 0.2.7 — unreleased
+
+- **Security: Electron 31 → 44.** 31 was long out of support; the sign-in
+  window renders live web pages, so it needs current Chromium security fixes.
+  electron-builder 24 → 26.
+- **Security: the login cookie is encrypted on disk** (OS keychain on macOS,
+  DPAPI on Windows). macOS may ask once per update to allow keychain access.
+- **Security: hardened runtime switches.** Release builds can't be run as
+  plain Node.js and ignore `NODE_OPTIONS` / `--inspect`; app code loads only
+  from `app.asar`.
+- CI builds on Node 24. Running from source needs Node 22+; the README no
+  longer needs an `xattr` step before the first `npm start`.
+
+## 0.2.6 — 2026-10-02
 
 - **Security:** links clicked inside the sign-in window open in your default
   browser instead of an in-app window that shares the login session. Only
