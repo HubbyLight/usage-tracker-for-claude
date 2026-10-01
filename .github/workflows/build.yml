@@ -72,6 +72,8 @@ jobs:
             dist/*.sha256
           fail_on_unmatched_files: false
           body: |
+            **What's new:** see [CHANGELOG.md](https://github.com/HubbyLight/usage-tracker-for-claude/blob/main/CHANGELOG.md).
+
             Download for your platform below. Each file has a matching `.sha256`
             checksum — every binary here is built from this tag's source by the
             public GitHub Actions workflow (`.github/workflows/build.yml`).

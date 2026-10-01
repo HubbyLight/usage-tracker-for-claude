@@ -1,6 +1,6 @@
 {
   "name": "claude-usage-tracker",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Tray / menu-bar app that tracks your Claude.ai 5-hour and weekly usage at a glance",
   "main": "main.js",
   "license": "MIT",

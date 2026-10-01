@@ -2,7 +2,7 @@
 # usage-tracker-for-claude
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-0.2.3-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-0.2.4-brightgreen.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-0078D6.svg)
 ![Built with Electron](https://img.shields.io/badge/built%20with-Electron-47848F.svg?logo=electron&logoColor=white)
 
@@ -10,8 +10,9 @@ A featherweight system-tray (Windows) / menu-bar (macOS) app that shows your
 **claude.ai 5-hour session** and **weekly** usage at a glance — with reset
 countdowns and limit alerts — so you never get throttled mid-prompt again.
 
-Left-click the tray icon for a popup with both percentages and live countdowns.
-The tray icon itself is a tiny dual-ring gauge that fills as your usage climbs.
+Click the tray / menu-bar icon to open a popup with both percentages and live
+countdowns; click it again to close it. Right-click for the menu (**Refresh now**,
+sign in, launch at login, notifications, quit). The tray icon itself is a tiny dual-ring gauge that fills as your usage climbs.
 
 > _Unofficial, community-built tool. Not affiliated with, endorsed by, or
 > sponsored by Anthropic. "Claude" is a trademark of Anthropic._
@@ -65,15 +66,17 @@ Every release file is built by the public
 [GitHub Actions workflow](.github/workflows/build.yml) from the tagged source and
 ships with a `.sha256` checksum. To check one:
 
+Download the file **and** its `.sha256` into the same folder, then:
+
 ```bash
-shasum -a 256 Claude.Usage.0.2.3.exe          # macOS / Linux
+shasum -a 256 -c Claude.Usage.0.2.4.exe.sha256   # macOS / Linux → "OK"
 ```
 
 ```powershell
-Get-FileHash Claude.Usage.0.2.3.exe            # Windows PowerShell
+Get-FileHash Claude.Usage.0.2.4.exe              # Windows PowerShell
 ```
 
-The hash should match the `.sha256` file next to it on the Releases page.
+On Windows, compare the printed hash with the one inside the `.sha256` file.
 
 ### macOS
 
@@ -112,7 +115,13 @@ built from it by GitHub Actions (see _Verifying a download_ above).
    The first clears the download-quarantine flag; the second re-signs the app
    locally so Apple Silicon will run it. (If macOS offers to install the Command
    Line Developer Tools, accept — it's a one-time system component.)
-3. Open the app normally. You only do this once.
+3. Open the app normally. You only do this once per download.
+
+**Updating.** Right-click the menu-bar icon → **Quit**, drag the new
+**Claude Usage.app** from the new `.dmg` over the old one in Applications, and
+run the two Terminal lines above again (each new download is quarantined
+afresh). After that the `.dmg` itself can be deleted — the app lives in
+Applications; the `.dmg` is only the box it ships in.
 
 Still blocked, or prefer no Terminal? **Run it from source instead** (next
 section) — that path has no Gatekeeper step at all.
@@ -180,7 +189,7 @@ Find `<your-org-uuid>` via claude.ai → Settings → Usage with DevTools open
 
 - **[Electron](https://www.electronjs.org/)** — the desktop shell (tray, windows, notifications)
 - **[Node.js](https://nodejs.org/)** — runtime
-- **[electron-builder](https://www.electron.build/)** — packages the portable `.exe`
+- **[electron-builder](https://www.electron.build/)** — packages the portable `.exe` and the macOS `.dmg` / `.zip`
 - No runtime UI/graphics dependencies — the gauges and tray icon are pure JS + hand-rolled PNG encoding.
 
 ---
@@ -197,14 +206,20 @@ discuss the direction.
 
 ## 📦 Publishing a release (maintainer note)
 
-To hand users a ready-to-run `.exe`:
+Releases are built and published by
+[GitHub Actions](.github/workflows/build.yml) — no local build needed:
 
-```bash
-npm run dist
-```
+1. Bump `version` in `package.json` (and `package-lock.json`), the README
+   badge, and add an entry to [CHANGELOG.md](CHANGELOG.md).
+2. Commit and push to `main`.
+3. Tag and push the tag:
+   ```bash
+   git tag v0.2.4 && git push origin v0.2.4
+   ```
 
-This produces a portable executable in `dist/`. Create a **Release** on GitHub and
-attach that file so it appears under the Releases tab.
+The workflow builds Windows and macOS in parallel and attaches the `.exe`,
+`.dmg`, `.zip` and a `.sha256` for each to a new public Release.
+(`npm run dist` / `npm run dist:mac` still work for a local build into `dist/`.)
 
 ---
 

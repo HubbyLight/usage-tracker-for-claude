@@ -153,13 +153,12 @@ function maybeNotify(kind, label, pct) {
         body,
         icon: NOTIF_ICON(),
       });
-      n.on('click', () => { if (popup) { positionPopupIfNeeded(); popup.show(); popup.focus(); sendToPopup(); } });
+      n.on('click', () => showPopup());
       n.show();
       break; // only the highest newly-crossed threshold
     }
   }
 }
-function positionPopupIfNeeded() { if (!userPlaced) positionPopup(); }
 
 let saveBoundsTimer = null;
 function saveBounds() {
@@ -415,10 +414,24 @@ function togglePopup() {
   // then this click handler runs — without this guard it would instantly
   // reopen, so the tray button could never close the popup.
   if (Date.now() - popupHiddenAt < 300) return;
+  showPopup();
+}
+
+function showPopup() {
+  if (!popup) return;
   if (!userPlaced) positionPopup();
   popup.show();
   popup.focus();
   sendToPopup();
+}
+
+// Tray-menu refresh: a background poll alone is invisible (the popup is hidden,
+// and on macOS opening the menu blurs it away), so open the popup and tell it to
+// replay the count-up — same feedback as its own ↻ button.
+function refreshFromTray() {
+  showPopup();
+  if (popup) popup.webContents.send('manual-refresh');
+  poll();
 }
 
 function sendToPopup() {
@@ -544,7 +557,7 @@ function loginItemOpts() {
 function buildTray() {
   tray = new Tray(baseTrayImage());
   const menu = Menu.buildFromTemplate([
-    { label: 'Refresh now', click: () => poll() },
+    { label: 'Refresh now', click: () => refreshFromTray() },
     { label: 'Sign in to Claude…', click: () => showLogin() },
     { type: 'separator' },
     {

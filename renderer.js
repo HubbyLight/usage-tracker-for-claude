@@ -285,6 +285,8 @@ function render(u) {
 }
 
 $('refresh').onclick = () => { forceAnimate = true; window.usageApi.refresh(); };
+// "Refresh now" from the tray menu → same visible count-up as the ↻ button
+window.usageApi.onManualRefresh(() => { forceAnimate = true; });
 
 // pin: keep the popup on screen (no auto-hide)
 let pinned = false;
