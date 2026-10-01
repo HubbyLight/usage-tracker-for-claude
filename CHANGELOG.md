@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.5
+
+- Usage percentages (ring view, horizontal and vertical bars) are now bold;
+  the small "used" label stays regular weight.
+
 ## 0.2.4
 
 - **Tray menu "Refresh now" now gives feedback.** It opens the popup and

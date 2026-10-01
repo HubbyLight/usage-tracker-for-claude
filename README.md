@@ -2,7 +2,7 @@
 # usage-tracker-for-claude
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-0.2.4-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-0.2.5-brightgreen.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-0078D6.svg)
 ![Built with Electron](https://img.shields.io/badge/built%20with-Electron-47848F.svg?logo=electron&logoColor=white)
 
@@ -69,11 +69,11 @@ ships with a `.sha256` checksum. To check one:
 Download the file **and** its `.sha256` into the same folder, then:
 
 ```bash
-shasum -a 256 -c Claude.Usage.0.2.4.exe.sha256   # macOS / Linux → "OK"
+shasum -a 256 -c Claude.Usage.0.2.5.exe.sha256   # macOS / Linux → "OK"
 ```
 
 ```powershell
-Get-FileHash Claude.Usage.0.2.4.exe              # Windows PowerShell
+Get-FileHash Claude.Usage.0.2.5.exe              # Windows PowerShell
 ```
 
 On Windows, compare the printed hash with the one inside the `.sha256` file.
@@ -214,7 +214,7 @@ Releases are built and published by
 2. Commit and push to `main`.
 3. Tag and push the tag:
    ```bash
-   git tag v0.2.4 && git push origin v0.2.4
+   git tag v0.2.5 && git push origin v0.2.5
    ```
 
 The workflow builds Windows and macOS in parallel and attaches the `.exe`,
