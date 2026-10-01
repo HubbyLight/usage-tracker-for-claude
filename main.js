@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, Tray, Menu, ipcMain, screen, nativeImage, Notification } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, screen, nativeImage, Notification, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -41,7 +41,10 @@ const USAGE_ENDPOINT = (config.USAGE_ENDPOINT || '').trim();
 // id changes per logged-in account. We discover it at runtime from
 // /api/organizations (the chat-capable org). usageOrgUuid caches that choice;
 // it's cleared and re-discovered automatically if the endpoint later 404s.
-const ORGS_ENDPOINT = 'https://claude.ai/api/organizations';
+const CLAUDE_ORIGIN = 'https://claude.ai';
+const ORGS_ENDPOINT = CLAUDE_ORIGIN + '/api/organizations';
+// Hosts allowed to open as in-app windows from the sign-in window (OAuth popups).
+const IN_APP_HOSTS = ['claude.ai', 'anthropic.com', 'accounts.google.com', 'appleid.apple.com'];
 let usageOrgUuid = null;
 const POLL_SECONDS = 20;                // how often to refresh (lightweight GET; server data itself updates less often)
 
@@ -370,14 +373,24 @@ function createClaudeWindow() {
       partition: 'persist:claude',   // keeps you logged in across restarts
       contextIsolation: true,
       nodeIntegration: false,
+      sandbox: true,
     },
   });
-  claudeWin.loadURL('https://claude.ai/');
-  // This window is a real browser for signing in (OAuth may open popups), but
-  // child windows are restricted to https so no file:// or custom-scheme
-  // window can ever be spawned from page content.
-  claudeWin.webContents.setWindowOpenHandler(({ url }) =>
-    url.startsWith('https://') ? { action: 'allow' } : { action: 'deny' });
+  claudeWin.loadURL(CLAUDE_ORIGIN + '/');
+  // This window is a real browser for signing in, so it can follow redirects to
+  // identity providers. New windows, though, only open in-app for claude.ai and
+  // the sign-in providers; any other https link (e.g. one clicked in a chat)
+  // goes to the default browser, so arbitrary sites never load inside the
+  // logged-in session. Non-https URLs are always refused.
+  claudeWin.webContents.setWindowOpenHandler(({ url }) => {
+    let u;
+    try { u = new URL(url); } catch (_) { return { action: 'deny' }; }
+    if (u.protocol !== 'https:') return { action: 'deny' };
+    const inApp = IN_APP_HOSTS.some((h) => u.hostname === h || u.hostname.endsWith('.' + h));
+    if (inApp) return { action: 'allow' };
+    shell.openExternal(u.href);
+    return { action: 'deny' };
+  });
   claudeWin.on('close', (e) => { e.preventDefault(); claudeWin.hide(); }); // don't kill session
 }
 
@@ -452,6 +465,27 @@ function updateTray() {
   tray.setImage(trayImage());   // rings on the taskbar mirror current usage
 }
 
+/* ---- the poll script runs in whatever page the sign-in window is showing, so
+        only run it on claude.ai itself. While a page is loading, poll once it
+        finishes. If the hidden window has drifted elsewhere (e.g. a sign-in
+        redirect that never came back), send it home first. When the window is
+        visible the user may be mid-sign-in on a provider page — leave it. ---- */
+let pollAfterLoad = false;
+function pollWhenLoaded() {
+  if (pollAfterLoad) return;
+  pollAfterLoad = true;
+  claudeWin.webContents.once('did-stop-loading', () => { pollAfterLoad = false; poll(); });
+}
+function claudeReady() {
+  const wc = claudeWin.webContents;
+  if (wc.isLoading()) { pollWhenLoaded(); return false; }
+  let origin = '';
+  try { origin = new URL(wc.getURL()).origin; } catch (_) {}
+  if (origin === CLAUDE_ORIGIN) return true;
+  if (!claudeWin.isVisible()) { claudeWin.loadURL(CLAUDE_ORIGIN + '/'); pollWhenLoaded(); }
+  return false;
+}
+
 /* ---- the actual data fetch: runs the request INSIDE the logged-in
         claude.ai window so its session cookies are attached automatically ---- */
 async function poll() {
@@ -472,6 +506,7 @@ async function poll() {
   }
 
   if (!claudeWin) createClaudeWindow();
+  if (!claudeReady()) return;   // keep showing the last result until it is
 
   // If config.js pins USAGE_ENDPOINT we use it verbatim; otherwise we discover
   // the chat org lazily (see usageOrgUuid comment). We pass the cached uuid into

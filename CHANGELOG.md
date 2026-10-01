@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.6 — unreleased
+
+- **Security:** links clicked inside the sign-in window open in your default
+  browser instead of an in-app window that shares the login session. Only
+  claude.ai and the sign-in providers open in-app.
+- **Security:** the usage poll runs only when the sign-in window is on
+  claude.ai. If the hidden window has wandered elsewhere, it is sent back
+  first.
+- CI: third-party GitHub Actions are pinned to commit SHAs.
+- README: documents that the login cookie is stored unencrypted on disk.
+
 ## 0.2.5 — 2026-10-02
 
 - Usage percentages (ring view, horizontal and vertical bars) are now bold;

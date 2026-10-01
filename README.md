@@ -2,7 +2,7 @@
 # usage-tracker-for-claude
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-0.2.5-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-0.2.6-brightgreen.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-0078D6.svg)
 ![Built with Electron](https://img.shields.io/badge/built%20with-Electron-47848F.svg?logo=electron&logoColor=white)
 
@@ -72,11 +72,11 @@ ships with a `.sha256` checksum. To check one:
 Download the file **and** its `.sha256` into the same folder, then:
 
 ```bash
-shasum -a 256 -c Claude.Usage.0.2.5.exe.sha256   # macOS / Linux → "OK"
+shasum -a 256 -c Claude.Usage.0.2.6.exe.sha256   # macOS / Linux → "OK"
 ```
 
 ```powershell
-Get-FileHash Claude.Usage.0.2.5.exe              # Windows PowerShell
+Get-FileHash Claude.Usage.0.2.6.exe              # Windows PowerShell
 ```
 
 On Windows, compare the printed hash with the one inside the `.sha256` file.
@@ -218,7 +218,7 @@ Releases are built and published by
 2. Commit and push to `main`.
 3. Tag and push the tag:
    ```bash
-   git tag v0.2.5 && git push origin v0.2.5
+   git tag v0.2.6 && git push origin v0.2.6
    ```
 
 The workflow builds Windows and macOS in parallel and attaches the `.exe`,
@@ -235,7 +235,12 @@ The workflow builds Windows and macOS in parallel and attaches the `.exe`,
 - **Your session stays local:** the claude.ai login lives in Electron's own
   profile on your machine (`persist:claude` partition). The app never reads,
   exports, or uploads your cookies — requests run inside that window, so the
-  browser attaches them as it would on claude.ai.
+  browser attaches them as it would on claude.ai. Links you click in that
+  window open in your default browser, not inside the logged-in session.
+- **Known limitation:** Electron stores that login cookie on disk without
+  encrypting it (the file is readable only by your user account). A real
+  browser encrypts it with the OS keychain. Turning on Electron's cookie
+  encryption is planned.
 - **On disk:** only `settings.json` (notification toggle) and
   `popup-bounds.json` (window position), next to the claude.ai login session, in
   the app's user-data folder — `%APPDATA%\claude-usage-tracker` on Windows,
